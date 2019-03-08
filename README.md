@@ -5,22 +5,34 @@ This tool is used to automatically connect Substance Painter textures to Arnold,
 
 ## Installation
 
-* Put the SubstancePainterToMaya folder in a maya script directory (I.e: C:\Users\user\Documents\maya\scripts on Windows)   
-* Create a shelf button in Maya with the following Python command
-from SubstancePainterToMaya import main
-main.PainterToMaya()
+* Put the SubstancePainterToMaya folder in a maya script directory (I.e: C:\Users\user\Documents\maya\scripts on Windows)    
+![install_path](pics/01_installPath.jpg)  
+
+* The content of the folder need to be this one  
+![Folder content](pics/02_folderContent.jpg)  
+ 
+* Create a shelf button in Maya with the following Python command  
+![Shelf command](pics/04_shelfContent.jpg)  
+
 
 ## How to use
-1. Click on the shelf button
-2. Define the texture folder
-3. Define the Naming Convention
-4. Choose the renderer
-5. Choose a materials option
-6. Click on Launch
-7. Specify where to plug each found maps
-8. Choose some options
-9. Click on Proceed
-10. Enjoy !
+1. Open a scene
+![Open scene](pics/03_openScene.jpg)  
+2. Click on the shelf button to launch the tool  
+![Launch the tool](pics/06_launchTool.jpg)  
+3. Define the texture folder
+4. Define the Naming Convention
+5. Choose the renderer
+6. Choose a materials option
+7. Click on Launch  
+![Launch](pics/10_launch.jpg)  
+8. Specify where to plug each found maps
+9. Choose some options  
+![Options](pics/11_setOptions.jpg)  
+10. Click on Proceed  
+![Proceed](pics/12_proceed.jpg)  
+11. Enjoy !  
+![Enjoy](pics/13_result.jpg)  
 
 ## Features details
 
@@ -79,6 +91,71 @@ Click this button to import the textures, create the nodes and connect everythin
 
 1. Usable with VRay and Renderman
 2. Choose the shader to use (I.e: aiStandardHair, aiStandardVolume...)
+
+## Step by step on a case
+1 - A scene is opened  
+
+![open scene](pics/03_openScene.jpg)
+  
+2 - With existing materials
+
+![existing materials](pics/05_existingMaterials.jpg)  
+
+3 - I launch the tool
+  
+![install_path](pics/06_launchTool.jpg)  
+
+4 - I use the predefined texture folder (project/sourceImages) in my case, use **Get** to use another one
+  
+![install_path](pics/07_textureFolder.jpg)  
+
+5 - I let the naming convention by default because my texture files are matching it (aWord_textureSet_textureChannel.png)
+  
+![install_path](pics/08_textureFolderContent.jpg)  
+
+6 - I click on launch to search for the textures.  
+You can now see the list of the found maps, for each map you can specify in which aiStandardSurface parameter you want to plug it.  
+See that a uvSnap have been found, I let the dropdown menu on ---- Choose so it will not be used  
+For more usual maps, the parameters are already set (but you can change them if you want)
+    
+![install_path](pics/10_launch.jpg)  
+
+7 - I set the options (all in this case, so I will use height in bug and displace, force the texture replacement, add a colorCorrect after each file node and add subdivisions to the models)
+    
+![install_path](pics/11_setOptions.jpg)  
+
+8 - I click on proceed to launch the procedure
+  
+![install_path](pics/12_proceed.jpg)  
+
+9 - Here is the result, textures are applied
+  
+![install_path](pics/13_result.jpg)  
+
+10 - In the Hypershade I can see all the new nodes
+  
+![install_path](pics/14_hypershade.jpg)  
+
+11 - A material in details, with the colorCorrects, the connection for bump and normalMap, the displacement
+  
+![install_path](pics/15_materialDetails.jpg)  
+
+12 - A created material, Lambert1 was defined as a name in my textureSets (see the texture folder content), because Lambert1 isn't an aiStandardShader, a new one is created with the name Lambert1_shd
+  
+![install_path](pics/16_createdMaterial.jpg)  
+
+13 - The models with already existing materials now have the subdivisions specified in the options
+  
+![install_path](pics/17_subdivisions.jpg)  
+
+14 - The wireframe render (subdivisions power !)
+  
+![install_path](pics/18_subdivisions02.jpg)  
+
+15 - And the final result (quickly made for this documentation)
+  
+![install_path](pics/19_render.jpg)  
+
 
 ## Credits
 

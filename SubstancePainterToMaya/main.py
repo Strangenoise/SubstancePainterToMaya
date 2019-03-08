@@ -225,6 +225,7 @@ class PainterToMaya:
 
         self.checkbox3 = QtWidgets.QCheckBox('Force texture replacement')
         self.checkbox3.setChecked(True)
+        self.checkbox3.setEnabled(False)
         self.optionsSubLayout1.addWidget(self.checkbox3)
 
         self.checkbox4 = QtWidgets.QCheckBox('Add colorCorrect node after each file node')
@@ -636,10 +637,12 @@ class PainterToMaya:
         shader = mc.listConnections(material + '.outColor', d=True)[0]
         meshes = mc.listConnections(shader, type='mesh')
 
-        # For all shapes add the render subdivisions
-        for mesh in meshes:
-            mc.setAttr(mesh + '.aiSubdivType', subdivType)
-            mc.setAttr(mesh + '.aiSubdivIterations', int(iterations))
+        if meshes:
+            
+            # For all shapes add the render subdivisions
+            for mesh in meshes:
+                mc.setAttr(mesh + '.aiSubdivType', subdivType)
+                mc.setAttr(mesh + '.aiSubdivIterations', int(iterations))
 
     def addSubdivisionsCheckbox(self):
         """
