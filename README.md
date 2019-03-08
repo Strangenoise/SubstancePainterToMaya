@@ -79,3 +79,10 @@ Click this button to import the textures, create the nodes and connect everythin
 
 1. Usable with VRay and Renderman
 2. Choose the shader to use (I.e: aiStandardHair, aiStandardVolume...)
+
+## Credits
+
+Created by Tristan Le Granche  
+Licence CC-BY-NC  
+
+Bugs report and ask for commercial use to tristan.legranche@gmail.com
