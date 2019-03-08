@@ -552,9 +552,6 @@ class PainterToMaya:
         # Create a place2d node
         place2d = mc.shadingNode('place2dTexture', asUtility=True, name=material + '_' + mapFound + '_place2d')
 
-        # Add color management to the file node
-        self.connectColorManagement(fileNode)
-
         # Set the file path of the file node
         mc.setAttr(fileNode + '.fileTextureName', itemPath, type='string')
 
