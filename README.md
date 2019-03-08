@@ -5,10 +5,10 @@ This tool is used to automatically connect Substance Painter textures to Arnold,
 
 ## Installation
 
-* Put the SubstancePainterToMaya folder in a PYTHONPATH folder (usually, in C:\Users\user\Documents\maya\scripts on Windows)   
+* Put the SubstancePainterToMaya folder in a maya script directory (I.e: C:\Users\user\Documents\maya\scripts on Windows)   
 * Create a shelf button in Maya with the following Python command
-import SubstancePainterToMaya as sptm
-sptm.main.PainterToMaya()
+from SubstancePainterToMaya import main
+main.PainterToMaya()
 
 ## How to use
 1. Click on the shelf button
