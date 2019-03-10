@@ -315,7 +315,6 @@ class PainterToMaya:
         self.mapsListColorAttributesIndices = config.MAP_LIST_COLOR_ATTRIBUTES_INDICES
         self.mapsDontUseIds = config.DONT_USE_IDS
         self.shaderToUse = config.SHADER_TO_USE
-        print self.shaderToUse
         self.normalNode = config.NORMAL_NODE
         self.bumpNode = config.BUMP_NODE
 
@@ -696,6 +695,20 @@ class PainterToMaya:
             self.subdivType.setEnabled(False)
             self.subdivIter.setEnabled(False)
 
+    def createMaterial(self, material, materialToUse):
+
+        # Create the material
+        material = mc.shadingNode(materialToUse, asShader=True, name=material + '_shd')
+
+        return material
+
+    def createShadingGroup(self, material):
+
+        shadingEngineName = material.replace('_shd', '_SG')
+        shadingEngine = mc.shadingNode('shadingEngine', asPostProcess=True, name=shadingEngineName)
+
+        return shadingEngine
+
     def createMaterialAndShadingGroup(self, material):
         """
         Create a material and it's shading group
@@ -704,11 +717,10 @@ class PainterToMaya:
         """
 
         # Create the material
-        material = mc.shadingNode(self.shaderToUse, asShader=True, name=material + '_shd')
+        material = self.createMaterial(self, material, self.shaderToUse)
 
         # Create the shading group
-        shadingEngineName = material.replace('_shd', '_SG')
-        shadingEngine = mc.shadingNode('shadingEngine', asPostProcess=True, name=shadingEngineName)
+        shadingEngine = self.createShadingGroup(material)
 
         # Connect the material to the shading group
         mc.connectAttr(material + '.outColor', shadingEngine + '.surfaceShader')
@@ -980,14 +992,68 @@ class PainterToMaya:
             outputAttr = 'outColorR'
 
         # If height
-        if attributeName == 'normalCamera' and outputAttr == 'outColorR':
+        if attributeName == 'bumpMap' and outputAttr == 'outColor':
 
             # If bump
+            if self.checkbox1.isChecked():
+
+                bumpConnections = mc.listConnections(material + '.bumpMap')
+
+                if mc.getAttr(material + '.mapType') == 1 and bumpConnections:
+
+                    # Create bump material
+                    bumpMaterial = material.replace('_shd', '_bump_shd')
+                    bumpMaterial = self.createMaterial(bumpMaterial, self.bumpNode)
+                    mc.setAttr(bumpMaterial + '.mapType', 0)
+
+                    # Connect file to bump material and original material to bump material
+                    mc.connectAttr(imageNode + '.outColor', bumpMaterial + '.bumpMap')
+                    mc.connectAttr(material + '.outColor', bumpMaterial + '.baseMaterial')
+
+                    # Connect bump material to original material shading group
+                    shadingGroups = mc.listConnections(material + '.outColor')
+
+                    for shadingGroup in shadingGroups:
+                        # Connect the displacement node to all the found shading engines
+                        mc.connectAttr(bumpMaterial + '.outColor',
+                                       shadingGroup + '.surfaceShader', force=forceTexture)
+
+                else:
+                    mc.connectAtr(imageNode + '.outColor', material + '.bumpMap')
+                    mc.setAttr(material + '.mapType', 0)
 
             # If displace
             if self.checkbox2.isChecked():
                 self.createDisplacementMap(material, forceTexture, imageNode)
 
+        # If normal Map
+        if attributeName == 'bumpMap' and normalMap:
+
+            bumpConnections = mc.listConnections(material + '.bumpMap')
+
+            if mc.getAttr(material + '.mapType') == 0 and bumpConnections:
+
+                # Create bump material
+                bumpMaterial = material.replace('_shd', '_bump_shd')
+                bumpMaterial = self.createMaterial(bumpMaterial, self.bumpNode)
+                mc.setAttr(bumpMaterial + '.mapType', 1)
+
+                # Connect file to bump material and original material to bump material
+                mc.connectAttr(imageNode + '.outColor', bumpMaterial + '.bumpMap')
+                mc.connectAttr(material + '.outColor', bumpMaterial + '.baseMaterial')
+
+                # Connect bump material to original material shading group
+                shadingGroups = mc.listConnections(material + '.outColor')
+
+                for shadingGroup in shadingGroups:
+                    # Connect the displacement node to all the found shading engines
+                    mc.connectAttr(bumpMaterial + '.outColor',
+                                   shadingGroup + '.surfaceShader', force=forceTexture)
+
+            else:
+                mc.connectAtr(imageNode + '.outColor', material + '.bumpMap')
+                mc.setAttr(material + '.mapType', 1)
+            
         # If it's another type of map
         else:
             self.connectTexture(imageNode, '.' + outputAttr, material, '.' + attributeName)
