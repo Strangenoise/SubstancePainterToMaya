@@ -56,16 +56,6 @@ class PainterToMaya:
 
     def __init__(self):
 
-        self.baseColor = cfg.BASE_COLOR
-        self.height = cfg.HEIGHT
-        self.metalness = cfg.METALNESS
-        self.normal = cfg.NORMAL
-        self.roughness = cfg.ROUGHNESS
-        self.matte = cfg.MATTE
-        self.opacity = cfg.OPACITY
-        self.subsurface = cfg.SUBSURFACE
-        self.emission = cfg.EMISSION
-
         print('\n\n' + PLUGIN_NAME + ' version ' + PLUGIN_VERSION + '\n')
         self.actualWorkspace = mc.workspace(fullName=True)
         self.initUI()
@@ -153,8 +143,7 @@ class PainterToMaya:
         self.rendererRadio1 = QtWidgets.QRadioButton('Arnold')
         self.grpRadioRenderer.addButton(self.rendererRadio1)
         self.rendererRadio1.setChecked(True)
-        self.rendererRadio2 = QtWidgets.QRadioButton('VRay (to come)')
-        self.rendererRadio2.setEnabled(False)
+        self.rendererRadio2 = QtWidgets.QRadioButton('VRay')
         self.grpRadioRenderer.addButton(self.rendererRadio2)
         self.rendererRadio3 = QtWidgets.QRadioButton('Renderman (to come)')
         self.rendererRadio3.setEnabled(False)
@@ -306,9 +295,19 @@ class PainterToMaya:
         :return: None
         """
 
+        self.renderer = 'Arnold'
+
         # Check for the render engine and load config file
         if self.grpRadioRenderer.checkedId() == -2:
             import config_mtoa as config
+            reload(config)
+            self.renderer = 'Arnold'
+            print 'Arnold'
+        elif self.grpRadioRenderer.checkedId() == -3:
+            import config_vray as config
+            reload(config)
+            self.renderer = 'Vray'
+            print 'Vray'
 
         # Set variables
         self.mapsList = config.MAP_LIST
@@ -316,8 +315,19 @@ class PainterToMaya:
         self.mapsListColorAttributesIndices = config.MAP_LIST_COLOR_ATTRIBUTES_INDICES
         self.mapsDontUseIds = config.DONT_USE_IDS
         self.shaderToUse = config.SHADER_TO_USE
+        print self.shaderToUse
         self.normalNode = config.NORMAL_NODE
         self.bumpNode = config.BUMP_NODE
+
+        self.baseColor = config.BASE_COLOR
+        self.height = config.HEIGHT
+        self.metalness = config.METALNESS
+        self.normal = config.NORMAL
+        self.roughness = config.ROUGHNESS
+        self.matte = config.MATTE
+        self.opacity = config.OPACITY
+        self.subsurface = config.SUBSURFACE
+        self.emission = config.EMISSION
 
         # Display second part of the interface
         self.grpFoundMaps.setVisible(True)
@@ -451,26 +461,46 @@ class PainterToMaya:
         :return: Index of the associated attribute
         """
 
-        if mapName in self.baseColor:
-            return 1
-        elif mapName in self.height:
-            return 2
-        elif mapName in self.metalness:
-            return 3
-        elif mapName in self.normal:
-            return 4
-        elif mapName in self.roughness:
-            return 5
-        elif mapName in self.matte:
-            return 54
-        elif mapName in self.opacity:
-            return 49
-        elif mapName in self.subsurface:
-            return 28
-        elif mapName in self.emission:
-            return 44
-        else:
-            return 0
+        # Check for the render engine and load config file
+        if self.renderer == 'Arnold':
+            if mapName in self.baseColor:
+                return 1
+            elif mapName in self.height:
+                return 2
+            elif mapName in self.metalness:
+                return 3
+            elif mapName in self.normal:
+                return 4
+            elif mapName in self.roughness:
+                return 5
+            elif mapName in self.matte:
+                return 54
+            elif mapName in self.opacity:
+                return 49
+            elif mapName in self.subsurface:
+                return 28
+            elif mapName in self.emission:
+                return 44
+            else:
+                return 0
+
+        elif self.renderer == 'Vray':
+            if mapName in self.baseColor:
+                return 1
+            elif mapName in self.height:
+                return 2
+            elif mapName in self.metalness:
+                return 3
+            elif mapName in self.normal:
+                return 5
+            elif mapName in self.roughness:
+                return 4
+            elif mapName in self.opacity:
+                return 10
+            elif mapName in self.subsurface:
+                return 35
+            else:
+                return 0
 
     def getTextureFolder(self):
         """
@@ -755,7 +785,7 @@ class PainterToMaya:
 
         return material, materialNotFound
 
-    def createNormalMap(self, material, attributeName, forceTexture, imageNode):
+    def createArnoldNormalMap(self, material, attributeName, forceTexture, imageNode):
         """
         Connect the normal map with the right nodes, even if a bump already exists
         :param material: The name of the material
@@ -886,6 +916,83 @@ class PainterToMaya:
             mc.connectAttr(displaceNode + '.displacement',
                            shadingGroup + '.displacementShader', force=forceTexture)
 
+    def connectForArnold(self, material, mapFound, itemPath, attributeName, attributeIndex, forceTexture):
+        # Add subdivisions
+        if self.checkbox5.isChecked():
+            self.addSubdivisions(material)
+
+        # Create file node
+        imageNode = self.createFileNode(material, mapFound, itemPath)
+
+        # Change file node parameters to Raw and add alphaIsLuminance
+        if attributeName is not 'baseColor':
+            try:
+                mc.setAttr(imageNode + '.colorSpace', 'Raw', type='string')
+            except:
+                pass
+            mc.setAttr(imageNode + '.alphaIsLuminance', True)
+
+        # Specify the output attribute to use for the file nodes
+        if attributeIndex in self.mapsListColorAttributesIndices:
+            outputAttr = 'outColor'
+        else:
+            outputAttr = 'outColorR'
+
+        # If height
+        if attributeName == 'normalCamera' and outputAttr == 'outColorR':
+
+            # If bump
+            if self.checkbox1.isChecked():
+                self.createBumpMap(material, attributeName, forceTexture, imageNode)
+
+            # If displace
+            if self.checkbox2.isChecked():
+                self.createDisplacementMap(material, forceTexture, imageNode)
+
+        # If normalMap
+        elif attributeName == 'normalCamera' and outputAttr == 'outColor':
+
+            self.createArnoldNormalMap(material, attributeName, forceTexture, imageNode)
+
+        # If it's another type of map
+        else:
+            self.connectTexture(imageNode, '.' + outputAttr, material, '.' + attributeName)
+
+    def connectForVray(self, material, mapFound, itemPath, attributeName, attributeIndex, forceTexture):
+
+        # Add subdivisions
+
+        # Create file node
+        imageNode = self.createFileNode(material, mapFound, itemPath)
+
+        # Change file node parameters to Raw and add alphaIsLuminance
+        if attributeName is not 'baseColor':
+            try:
+                mc.setAttr(imageNode + '.colorSpace', 'Raw', type='string')
+            except:
+                pass
+            mc.setAttr(imageNode + '.alphaIsLuminance', True)
+
+        # Specify the output attribute to use for the file nodes
+        if attributeIndex in self.mapsListColorAttributesIndices:
+            outputAttr = 'outColor'
+        else:
+            outputAttr = 'outColorR'
+
+        # If height
+        if attributeName == 'normalCamera' and outputAttr == 'outColorR':
+
+            # If bump
+
+            # If displace
+            if self.checkbox2.isChecked():
+                self.createDisplacementMap(material, forceTexture, imageNode)
+
+        # If it's another type of map
+        else:
+            self.connectTexture(imageNode, '.' + outputAttr, material, '.' + attributeName)
+
+
     def main(self):
         """
         Check if the textures need to be forced
@@ -929,47 +1036,14 @@ class PainterToMaya:
                         else:
                             if mc.objExists(material):
 
-                                # Add subdivisions
-                                if self.checkbox5.isChecked():
-                                    self.addSubdivisions(material)
+                                if self.renderer == 'Arnold':
+                                    self.connectForArnold(material, mapFound, itemPath, attributeName, attributeIndex, forceTexture)
 
-                                # Create file node
-                                imageNode = self.createFileNode(material, mapFound, itemPath)
+                                elif self.renderer == 'Vray':
+                                    self.connectForVray(material, mapFound, itemPath, attributeName, attributeIndex,
+                                                          forceTexture)
 
-                                # Change file node parameters to Raw and add alphaIsLuminance
-                                if attributeName is not 'baseColor':
-                                    try:
-                                        mc.setAttr(imageNode + '.colorSpace', 'Raw', type='string')
-                                    except:
-                                        pass
-                                    mc.setAttr(imageNode + '.alphaIsLuminance', True)
 
-                                # Specify the output attribute to use for the file nodes
-                                if attributeIndex in self.mapsListColorAttributesIndices:
-                                    outputAttr = 'outColor'
-                                else:
-                                    outputAttr = 'outColorR'
-
-                                # If height
-                                if attributeName == 'normalCamera' and outputAttr == 'outColorR':
-
-                                    # If bump
-                                    if self.checkbox1.isChecked():
-
-                                        self.createBumpMap(material, attributeName, forceTexture, imageNode)
-
-                                    # If displace
-                                    if self.checkbox2.isChecked():
-                                        self.createDisplacementMap(material, forceTexture, imageNode)
-
-                                # If normalMap
-                                elif attributeName == 'normalCamera' and outputAttr == 'outColor':
-
-                                    self.createNormalMap(material, attributeName, forceTexture, imageNode)
-
-                                # If it's another type of map
-                                else:
-                                    self.connectTexture(imageNode, '.' + outputAttr, material, '.' + attributeName)
 
                     else:
                         print item + ' not used'
