@@ -29,6 +29,36 @@ MAP_LIST_REAL_ATTRIBUTES = [
     '---- Matte', 'aiMatteColor', 'aiMatteColorA',
     '---- Don\'t use'
 ]
+
+BASE_COLOR = [
+    'baseColor', 'BaseColor', 'basecolor', 'color', 'Color', 'albedo', 'Albedo', 'diffuse', 'Diffuse'
+]
+HEIGHT = [
+    'displace', 'Displace', 'Displacement', 'displacement', 'height', 'Height',
+    'bump', 'Bump', 'BumpMap', 'bumpMap', 'displacementMap', 'DisplacementMap'
+]
+METALNESS = [
+    'metal', 'Metal', 'metalness', 'Metalness'
+]
+NORMAL = [
+    'normal', 'Normal', 'normalMap', 'NormalMap'
+]
+ROUGHNESS = [
+    'roughness', 'Roughness', 'specularRoughness', 'SpecularRoughness', 'specular', 'Specular'
+]
+MATTE = [
+    'Matte', 'matte'
+]
+OPACITY = [
+    'Opacity', 'opacity', 'transparency', 'Transparency'
+]
+SUBSURFACE = [
+    'subsurfaceColor', 'SubsurfaceColor', 'SSS', 'SSSColor', 'SSScolor', 'sss', 'sssColor', 'ssscolor'
+]
+EMISSION = [
+    'emission', 'Emission', 'emissive', 'Emissive', 'light', 'Light'
+]
+
 MAP_LIST_COLOR_ATTRIBUTES_INDICES = [1, 4, 7, 13, 20, 21, 28, 29, 34, 37, 40, 44, 49, 51, 52, 54]
 DONT_USE_IDS = [0, 6, 11, 18, 26, 32, 38, 42, 45, 48, 53, 56]
 SHADER_TO_USE = 'aiStandardSurface'
