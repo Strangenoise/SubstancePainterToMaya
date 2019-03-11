@@ -44,6 +44,7 @@ from PySide2 import QtCore
 from PySide2 import QtWidgets
 from shiboken2 import wrapInstance
 from maya import OpenMayaUI as omui
+import maya.OpenMaya as om
 
 # Variables
 PLUGIN_NAME = cfg.PLUGIN_NAME
@@ -142,9 +143,9 @@ class PainterToMaya:
         self.grpRadioRenderer = QtWidgets.QButtonGroup()
         self.rendererRadio1 = QtWidgets.QRadioButton('Arnold')
         self.grpRadioRenderer.addButton(self.rendererRadio1)
-        self.rendererRadio1.setChecked(True)
         self.rendererRadio2 = QtWidgets.QRadioButton('VRay')
         self.grpRadioRenderer.addButton(self.rendererRadio2)
+        self.rendererRadio2.setChecked(True)
         self.rendererRadio3 = QtWidgets.QRadioButton('Renderman (to come)')
         self.rendererRadio3.setEnabled(False)
         self.grpRadioRenderer.addButton(self.rendererRadio3)
@@ -210,6 +211,9 @@ class PainterToMaya:
         self.optionsSubLayout2 = QtWidgets.QHBoxLayout()
         self.optionsLayout.insertLayout(2, self.optionsSubLayout2, stretch=1)
 
+        self.optionsSubLayout3 = QtWidgets.QHBoxLayout()
+        self.optionsLayout.insertLayout(3, self.optionsSubLayout3, stretch=1)
+
         # Options Widgets
         self.checkbox1 = QtWidgets.QCheckBox('Use height as bump')
         self.optionsSubLayout1.addWidget(self.checkbox1)
@@ -227,7 +231,7 @@ class PainterToMaya:
         self.optionsSubLayout1.addWidget(self.checkbox4)
 
         self.checkbox5 = QtWidgets.QCheckBox('Add subdivisions')
-        self.checkbox5.stateChanged.connect(lambda: self.addSubdivisionsCheckbox())
+        self.checkbox5.stateChanged.connect(lambda: self.addArnoldSubdivisionsCheckbox())
         self.optionsSubLayout2.addWidget(self.checkbox5)
 
         self.subdivTypeTitle = QtWidgets.QLabel('Type')
@@ -244,6 +248,24 @@ class PainterToMaya:
         self.subdivIter = QtWidgets.QLineEdit('1')
         self.subdivIter.setEnabled(False)
         self.optionsSubLayout2.addWidget(self.subdivIter)
+
+        self.checkbox6 = QtWidgets.QCheckBox('Add subdivisions')
+        self.checkbox6.stateChanged.connect(lambda: self.addVraySubdivisionsCheckbox())
+        self.optionsSubLayout3.addWidget(self.checkbox6)
+
+        self.subdivIterVrayTitle = QtWidgets.QLabel('Edge Length')
+        self.optionsSubLayout3.addWidget(self.subdivIterVrayTitle)
+
+        self.subdivIterVray = QtWidgets.QLineEdit('4')
+        self.subdivIterVray.setEnabled(False)
+        self.optionsSubLayout3.addWidget(self.subdivIterVray)
+
+        self.subdivMaxVrayTitle = QtWidgets.QLabel('Max Subdivs')
+        self.optionsSubLayout3.addWidget(self.subdivMaxVrayTitle)
+
+        self.maxSubdivIterVray = QtWidgets.QLineEdit('4')
+        self.maxSubdivIterVray.setEnabled(False)
+        self.optionsSubLayout3.addWidget(self.maxSubdivIterVray)
 
         # Proceed
         self.grpProceed = QtWidgets.QGroupBox('Proceed')
@@ -331,6 +353,33 @@ class PainterToMaya:
         # Display second part of the interface
         self.grpFoundMaps.setVisible(True)
         self.grpOptions.setVisible(True)
+
+        if self.renderer == 'Arnold':
+            self.checkbox6.setVisible(False)
+            self.subdivIterVrayTitle.setVisible(False)
+            self.subdivIterVray.setVisible(False)
+            self.subdivMaxVrayTitle.setVisible(False)
+            self.maxSubdivIterVray.setVisible(False)
+
+            self.checkbox5.setVisible(True)
+            self.subdivIterTitle.setVisible(True)
+            self.subdivIter.setVisible(True)
+            self.subdivTypeTitle.setVisible(True)
+            self.subdivType.setVisible(True)
+
+        elif self.renderer == 'Vray':
+            self.checkbox5.setVisible(False)
+            self.subdivIterTitle.setVisible(False)
+            self.subdivIter.setVisible(False)
+            self.subdivTypeTitle.setVisible(False)
+            self.subdivType.setVisible(False)
+
+            self.checkbox6.setVisible(True)
+            self.subdivIterVrayTitle.setVisible(True)
+            self.subdivIterVray.setVisible(True)
+            self.subdivMaxVrayTitle.setVisible(True)
+            self.maxSubdivIterVray.setVisible(True)
+
         self.grpProceed.setVisible(True)
         self.launchButton.setText('Re-launch')
 
@@ -657,7 +706,7 @@ class PainterToMaya:
         else:
             mc.connectAttr(textureNode + textureOutput, targetNode + targetInput, force=True)
 
-    def addSubdivisions(self, material):
+    def addArnoldSubdivisions(self, material):
         """
         Add render subdivisions of a certain type
         :param material: The material used to find which shapes to subdivide
@@ -679,7 +728,31 @@ class PainterToMaya:
                 mc.setAttr(mesh + '.aiSubdivType', subdivType)
                 mc.setAttr(mesh + '.aiSubdivIterations', int(iterations))
 
-    def addSubdivisionsCheckbox(self):
+    def addVraySubdivisions(self, material):
+
+        # Get values from interface
+        maxSubdivs = int(self.maxSubdivIterVray.text())
+        edgeLength = float(self.subdivIterVray.text())
+
+        # Find the shapes connected to the material
+        shader = mc.listConnections(material + '.outColor', d=True)[0]
+        meshes = mc.listConnections(shader, type='mesh')
+        shapes = mc.listRelatives(meshes, s=True)
+
+        if shapes:
+
+            # For all shapes add the render subdivisions
+            for mesh in shapes:
+
+                mc.select(mesh, replace=True)
+                mc.vray("addAttributesFromGroup", mesh, "vray_subdivision", 1)
+                mc.vray("addAttributesFromGroup", mesh, "vray_subquality", 1)
+                mc.setAttr(mesh + '.vrayOverrideGlobalSubQual', 1)
+                mc.setAttr(mesh + '.vrayMaxSubdivs', maxSubdivs)
+                mc.setAttr(mesh + '.vrayEdgeLength', edgeLength)
+                mc.select(mesh, d=True)
+
+    def addArnoldSubdivisionsCheckbox(self):
         """
         Enable or disable subdivisions in the interface
         :return: None
@@ -694,6 +767,22 @@ class PainterToMaya:
         else:
             self.subdivType.setEnabled(False)
             self.subdivIter.setEnabled(False)
+
+    def addVraySubdivisionsCheckbox(self):
+        """
+        Enable or disable subdivisions in the interface
+        :return: None
+        """
+
+        # If subdivisions is checked
+        if self.checkbox6.isChecked():
+            self.subdivIterVray.setEnabled(True)
+            self.maxSubdivIterVray.setEnabled(True)
+
+        # If subdivisions is not checked
+        else:
+            self.subdivIterVray.setEnabled(False)
+            self.maxSubdivIterVray.setEnabled(False)
 
     def createMaterial(self, material, materialToUse):
 
@@ -717,7 +806,7 @@ class PainterToMaya:
         """
 
         # Create the material
-        material = self.createMaterial(self, material, self.shaderToUse)
+        material = self.createMaterial(material, self.shaderToUse)
 
         # Create the shading group
         shadingEngine = self.createShadingGroup(material)
@@ -931,7 +1020,7 @@ class PainterToMaya:
     def connectForArnold(self, material, mapFound, itemPath, attributeName, attributeIndex, forceTexture):
         # Add subdivisions
         if self.checkbox5.isChecked():
-            self.addSubdivisions(material)
+            self.addArnoldSubdivisions(material)
 
         # Create file node
         imageNode = self.createFileNode(material, mapFound, itemPath)
@@ -973,12 +1062,14 @@ class PainterToMaya:
     def connectForVray(self, material, mapFound, itemPath, attributeName, attributeIndex, forceTexture):
 
         # Add subdivisions
+        if self.checkbox6.isChecked():
+            self.addVraySubdivisions(material)
 
         # Create file node
         imageNode = self.createFileNode(material, mapFound, itemPath)
 
         # Change file node parameters to Raw and add alphaIsLuminance
-        if attributeName is not 'baseColor':
+        if attributeName is not 'color':
             try:
                 mc.setAttr(imageNode + '.colorSpace', 'Raw', type='string')
             except:
@@ -992,67 +1083,81 @@ class PainterToMaya:
             outputAttr = 'outColorR'
 
         # If height
-        if attributeName == 'bumpMap' and outputAttr == 'outColor':
+        if attributeName == 'bumpMap':
 
             # If bump
             if self.checkbox1.isChecked():
 
                 bumpConnections = mc.listConnections(material + '.bumpMap')
 
-                if mc.getAttr(material + '.mapType') == 1 and bumpConnections:
+                if mc.getAttr(material + '.bumpMapType') == 1 and bumpConnections:
 
                     # Create bump material
-                    bumpMaterial = material.replace('_shd', '_bump_shd')
-                    bumpMaterial = self.createMaterial(bumpMaterial, self.bumpNode)
-                    mc.setAttr(bumpMaterial + '.mapType', 0)
+                    print material
+                    if '_shd' in material:
+                        bumpMaterial = material.replace('_shd', '_bump')
+                    else:
+                        bumpMaterial = material + '_bump'
 
-                    # Connect file to bump material and original material to bump material
-                    mc.connectAttr(imageNode + '.outColor', bumpMaterial + '.bumpMap')
-                    mc.connectAttr(material + '.outColor', bumpMaterial + '.baseMaterial')
+                    bumpMaterial = self.createMaterial(bumpMaterial, self.bumpNode)
+                    mc.setAttr(bumpMaterial + '.bumpMapType', 0)
+
+                    # Connect file to bump material
+                    self.connectTexture(imageNode, '.' + outputAttr, bumpMaterial, '.' + 'bumpMap')
 
                     # Connect bump material to original material shading group
-                    shadingGroups = mc.listConnections(material + '.outColor')
+                    shadingGroups = mc.listConnections(material + '.outColor', destination=True)
 
                     for shadingGroup in shadingGroups:
                         # Connect the displacement node to all the found shading engines
-                        mc.connectAttr(bumpMaterial + '.outColor',
-                                       shadingGroup + '.surfaceShader', force=forceTexture)
+                        mc.connectAttr(bumpMaterial + '.outColor', shadingGroup + '.surfaceShader', force=forceTexture)
+
+                    # Connect material to bump material
+                    mc.connectAttr(material + '.outColor', bumpMaterial + '.base_material')
 
                 else:
-                    mc.connectAtr(imageNode + '.outColor', material + '.bumpMap')
-                    mc.setAttr(material + '.mapType', 0)
+                    self.connectTexture(imageNode, '.' + outputAttr, material, '.' + 'bumpMap')
+                    mc.setAttr(material + '.bumpMapType', 0)
 
             # If displace
             if self.checkbox2.isChecked():
                 self.createDisplacementMap(material, forceTexture, imageNode)
 
         # If normal Map
-        if attributeName == 'bumpMap' and normalMap:
+        elif attributeName == 'normalMap':
 
             bumpConnections = mc.listConnections(material + '.bumpMap')
 
-            if mc.getAttr(material + '.mapType') == 0 and bumpConnections:
+            print bumpConnections
+
+            if mc.getAttr(material + '.bumpMapType') == 0 and bumpConnections:
 
                 # Create bump material
-                bumpMaterial = material.replace('_shd', '_bump_shd')
-                bumpMaterial = self.createMaterial(bumpMaterial, self.bumpNode)
-                mc.setAttr(bumpMaterial + '.mapType', 1)
+                print material
+                if '_shd' in material:
+                    bumpMaterial = material.replace('_shd', '_bump')
+                else:
+                    bumpMaterial = material + '_bump'
 
-                # Connect file to bump material and original material to bump material
-                mc.connectAttr(imageNode + '.outColor', bumpMaterial + '.bumpMap')
-                mc.connectAttr(material + '.outColor', bumpMaterial + '.baseMaterial')
+                bumpMaterial = self.createMaterial(bumpMaterial, self.bumpNode)
+                mc.setAttr(bumpMaterial + '.bumpMapType', 1)
+
+                # Connect file to bump material
+                self.connectTexture(imageNode, '.' + outputAttr, bumpMaterial, '.' + 'bumpMap')
 
                 # Connect bump material to original material shading group
-                shadingGroups = mc.listConnections(material + '.outColor')
+                shadingGroups = mc.listConnections(material + '.outColor', destination=True)
 
                 for shadingGroup in shadingGroups:
                     # Connect the displacement node to all the found shading engines
-                    mc.connectAttr(bumpMaterial + '.outColor',
-                                   shadingGroup + '.surfaceShader', force=forceTexture)
+                    mc.connectAttr(bumpMaterial + '.outColor', shadingGroup + '.surfaceShader', force=forceTexture)
+
+                # Connect material to bump material
+                mc.connectAttr(material + '.outColor', bumpMaterial + '.base_material')
 
             else:
-                mc.connectAtr(imageNode + '.outColor', material + '.bumpMap')
-                mc.setAttr(material + '.mapType', 1)
+                self.connectTexture(imageNode, '.' + outputAttr, material, '.' + 'bumpMap')
+                mc.setAttr(material + '.bumpMapType', 1)
             
         # If it's another type of map
         else:

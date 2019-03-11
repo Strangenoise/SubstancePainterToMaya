@@ -7,12 +7,12 @@ MAP_LIST = [
     '----24 Reflection - advanced', 'reflectionExitColor',
     '----26 Refraction', 'refractionColor', 'refractionColorAmount', 'refractionGlossiness', 'refractionIOR', 'fogColor', 'fogMult', 'fogBias',
     '----34 Subsurface scattering', 'translucencyColor',
-    '----36 Bump and Normal mapping', 'bumpMap', 'bumpMult', 'bumpDeltaScale',
-    '----40 Don\'t use'
+    '----36 Bump and Normal mapping', 'bumpMap', 'normal', 'bumpMult', 'bumpDeltaScale',
+    '----41 Don\'t use'
 ]
 
 MAP_LIST_REAL_ATTRIBUTES = [
-    '---- Choose', 'color', 'bumpMap', 'reflectionColor', 'reflectionGlossiness', 'bumpMap', 'fresnelIOR',
+    '---- Choose', 'color', 'bumpMap', 'reflectionColor', 'reflectionGlossiness', 'normalMap', 'fresnelIOR',
     '---- Basic', 'color', 'diffuseColorAmount', 'opacityMap', 'roughnessAmount', 'illumColor',
     '---- Reflection', 'reflectionColor', 'reflectionColorAmount', 'hilightGlossiness', 'reflectionGlossiness', 'fresnelIOR',
     'ggxTailFalloff',
@@ -20,7 +20,7 @@ MAP_LIST_REAL_ATTRIBUTES = [
     '---- Reflection - advanced', 'reflectionExitColor',
     '---- Refraction', 'refractionColor', 'refractionColorAmount', 'refractionGlossiness', 'refractionIOR', 'fogColor', 'fogMult', 'fogBias',
     '---- Subsurface scattering', 'translucencyColor',
-    '---- Bump and Normal mapping', 'bumpMap', 'bumpMult', 'bumpDeltaScale',
+    '---- Bump and Normal mapping', 'bumpMap', 'normalMap', 'bumpMult', 'bumpDeltaScale',
     '---- Don\'t use'
 ]
 
@@ -54,7 +54,7 @@ EMISSION = [
 ]
 
 MAP_LIST_COLOR_ATTRIBUTES_INDICES = [1, 2, 3, 5, 10, 12, 14, 25, 27, 31, 34, 37]
-DONT_USE_IDS = [0, 7, 13, 20, 24, 26, 34, 36, 40]
+DONT_USE_IDS = [0, 7, 13, 20, 24, 26, 34, 36, 41]
 SHADER_TO_USE = 'VRayMtl'
 NORMAL_NODE = 'VRayBumpMtl'
 BUMP_NODE = 'VRayBumpMtl'
