@@ -25,7 +25,7 @@ MAP_LIST_REAL_ATTRIBUTES = [
 ]
 
 BASE_COLOR = [
-    'baseColor', 'BaseColor', 'basecolor', 'color', 'Color', 'albedo', 'Albedo', 'diffuse', 'Diffuse'
+    'baseColor', 'BaseColor', 'basecolor', 'color', 'Color', 'albedo', 'Albedo', 'diffuse', 'Diffuse', 'diff', 'Diff'
 ]
 HEIGHT = [
     'displace', 'Displace', 'Displacement', 'displacement', 'height', 'Height',
@@ -38,7 +38,7 @@ NORMAL = [
     'normal', 'Normal', 'normalMap', 'NormalMap'
 ]
 ROUGHNESS = [
-    'roughness', 'Roughness', 'specularRoughness', 'SpecularRoughness', 'specular', 'Specular', 'glossiness', 'glossy', 'Glossiness', 'Glossy'
+    'roughness', 'Roughness', 'specularRoughness', 'SpecularRoughness', 'specular', 'Specular', 'glossiness', 'glossy', 'Glossiness', 'Glossy', 'spec', 'Spec'
 ]
 MATTE = [
     'Matte', 'matte'

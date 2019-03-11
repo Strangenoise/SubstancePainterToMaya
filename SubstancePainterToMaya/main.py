@@ -118,11 +118,11 @@ class PainterToMaya:
 
         # Add Naming Convention widgets
         self.nomenclatureInfo = QtWidgets.QLabel(
-            'Use <textureSet> and <map> into the pattern to define your convention'
+            'Match the naming convention of the export from Substance Painter\nUse $map where you put your map\'s name\n$textureSet is needed too.'
         )
         self.namingConventionSubLayout1.addWidget(self.nomenclatureInfo)
 
-        self.namingConvention = QtWidgets.QLineEdit('mesh_<textureSet>_<map>')
+        self.namingConvention = QtWidgets.QLineEdit('$mesh_$textureSet_$map')
         self.namingConventionSubLayout2.addWidget(self.namingConvention)
 
         self.setNamingConventionButton = QtWidgets.QPushButton('Set')
@@ -425,12 +425,12 @@ class PainterToMaya:
                 for i in range(0, len(parts)):
 
                     # If the split is <textureSet>
-                    if parts[i] == '<textureSet>':
+                    if parts[i] == '$textureSet':
                         textureSetPos = i
                         textureSetSeparator = delimiter
 
                     # Elif the split is <map>
-                    elif parts[i] == '<map>':
+                    elif parts[i] == '$map':
                         mapPos = i
                         mapPosSeparator = delimiter
 
@@ -584,11 +584,12 @@ class PainterToMaya:
         text = 'I.e: '
 
         # Change the naming convention example
-        if '<textureSet>' in self.namingConvention.text() and '<map>' in self.namingConvention.text():
+        if '$textureSet' in self.namingConvention.text() and '$map' in self.namingConvention.text():
             text += self.namingConvention.text()
 
-            text = text.replace('<textureSet>', 'shader')
-            text = text.replace('<map>', 'baseColor')
+            text = text.replace('$textureSet', 'shader')
+            text = text.replace('$map', 'baseColor')
+            text = text.replace('$mesh', 'boy')
 
             self.namingConventionInfo.setStyleSheet(
                 'color:%s;' % 'white' +
@@ -598,7 +599,7 @@ class PainterToMaya:
             text += '.png'
 
         else:
-            text = 'Warning: <textureSet> and <map> are needed !'
+            text = 'Warning: $textureSet and $map are needed !'
             self.namingConventionInfo.setStyleSheet(
                 'color:%s;' % 'yellow' +
                 'font-weight:bold;'
