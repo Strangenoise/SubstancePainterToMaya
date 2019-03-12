@@ -568,12 +568,16 @@ class PainterToMaya:
             sourceImages = projectDirectory
 
         # Open a file dialog
-        workDirectory = mc.fileDialog2(startingDirectory=sourceImages, fileMode=2, okCaption='Select')[0]
+        try:
+            workDirectory = mc.fileDialog2(startingDirectory=sourceImages, fileMode=2, okCaption='Select')[0]
+        except:
+            return None
 
         # Update the texture path in the interface
-        self.texturePath.setText(workDirectory)
+        if workDirectory:
+            self.texturePath.setText(workDirectory)
 
-        return workDirectory
+            return workDirectory
 
     def setNamingConvention(self):
         """
