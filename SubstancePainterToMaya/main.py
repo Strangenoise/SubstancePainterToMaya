@@ -92,8 +92,8 @@ class PainterToMaya:
         self.grpBrowseForDirectory.setLayout(self.textureFolderLayout)
 
         # Add Texture folder widgets
-        sourceImagesFolder = self.actualWorkspace + '/' + TEXTURE_FOLDER
-        self.texturePath = QtWidgets.QLineEdit(sourceImagesFolder)
+        sourceImages = self.getProjectSourceImages()
+        self.texturePath = QtWidgets.QLineEdit(sourceImages)
         self.textureFolderLayout.addWidget(self.texturePath)
 
         self.getButton = QtWidgets.QPushButton('Get')
@@ -550,22 +550,36 @@ class PainterToMaya:
             else:
                 return 0
 
+    def getProjectSourceImages(self):
+
+        # Get project
+        projectDirectory = mc.workspace(rootDirectory=True, query=True)
+
+        # Set base texture folder
+        sourceImagesRule = mc.workspace(fileRuleEntry="sourceImages")
+        path = os.path.join(projectDirectory, sourceImagesRule)
+
+        if os.path.exists(path):
+            textureFolder = path
+        else:
+            # Set default path only if the folder exists otherwise
+            # leave it empty so it's easier to the user to set it manually?
+            textureFolder = ""
+
+        if os.path.isdir(textureFolder):
+            sourceImages = textureFolder
+        else:
+            sourceImages = projectDirectory
+
+        return sourceImages
+
     def getTextureFolder(self):
         """
         Get the base texture path in the interface, the file dialog start in the base texture path of the project
         :return: The texture directory
         """
 
-        # Get project
-        projectDirectory = mc.workspace(rootDirectory=True, query=True)
-
-        # Set base texture folder
-        textureFolder = projectDirectory + '/' + TEXTURE_FOLDER
-
-        if os.path.isdir(textureFolder):
-            sourceImages = textureFolder
-        else:
-            sourceImages = projectDirectory
+        sourceImages = self.getProjectSourceImages()
 
         # Open a file dialog
         try:
