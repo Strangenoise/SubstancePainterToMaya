@@ -584,10 +584,12 @@ class PainterToMaya:
         sourceImages = self.getProjectSourceImages()
 
         # Open a file dialog
-        try:
-            workDirectory = mc.fileDialog2(startingDirectory=sourceImages, fileMode=2, okCaption='Select')[0]
-        except:
-            return None
+        result = mc.fileDialog2(startingDirectory=sourceImages, fileMode=2, okCaption='Select')
+
+        if result is None:
+            return
+
+        workDirectory = result[0]
 
         # Update the texture path in the interface
         if workDirectory:
