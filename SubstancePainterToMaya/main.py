@@ -474,7 +474,7 @@ class PainterToMaya:
                     try:
                         mapName = item.split(mapPosSeparator)[mapPos].split('.')[0]
                     except:
-                        mapName = None
+                        continue
 
                     # If the map name is not already listed (e.i: baseColor)
                     if mapName and mapName not in self.mapsFound:
