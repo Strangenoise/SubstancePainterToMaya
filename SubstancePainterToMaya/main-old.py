@@ -124,50 +124,6 @@ def launch(ui):
     renderer.ui = ui
     renderer.define()
 
-    # Display second part of the interface
-    ui.grpFoundMaps.setVisible(True)
-    ui.grpOptions.setVisible(True)
-
-    arnoldUIElements = [ui.checkbox5, ui.subdivIterTitle, ui.subdivIter, ui.subdivTypeTitle, ui.subdivType]
-    vrayUIElements = [ui.checkbox6, ui.subdivIterVrayTitle, ui.subdivIterVray, ui.subdivMaxVrayTitle,
-                      ui.maxSubdivIterVray]
-    rendermanUIElements = []
-
-    if renderer == 'Arnold':
-        for item in vrayUIElements:
-            item.setVisible(False)
-
-        for item in rendermanUIElements:
-            item.setVisible(False)
-
-        for item in arnoldUIElements:
-            item.setVisible(True)
-
-    elif renderer == 'Vray':
-        for item in arnoldUIElements:
-            item.setVisible(False)
-
-        for item in rendermanUIElements:
-            item.setVisible(False)
-
-        for item in vrayUIElements:
-            item.setVisible(True)
-
-    elif renderer == 'PxrSurface' or renderer == 'PxrDisney':
-        for item in arnoldUIElements:
-            item.setVisible(False)
-
-        for item in vrayUIElements:
-            item.setVisible(False)
-
-        for item in rendermanUIElements:
-            item.setVisible(True)
-
-    ui.grpProceed.setVisible(True)
-    ui.launchButton.setText('Re-launch')
-
-    helper.clearLayout(ui.foundMapsLayout)
-
     # Populate the Found Maps part
     mapsFound = helper.populateFoundMaps(ui)
 

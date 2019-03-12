@@ -262,6 +262,16 @@ class PainterToMayaUI:
         self.grpOptions.setVisible(False)
         self.grpProceed.setVisible(False)
 
+        # List specific renderer elements
+        self.arnoldUIElements = [
+            self.checkbox5, self.subdivIterTitle, self.subdivIter, self.subdivTypeTitle, self.subdivType
+        ]
+        self.vrayUIElements = [
+            self.checkbox6, self.subdivIterVrayTitle, self.subdivIterVray,
+            self.subdivMaxVrayTitle, self.maxSubdivIterVray
+        ]
+        self.rendermanUIElements = []
+
         global window
 
         try:
@@ -273,6 +283,7 @@ class PainterToMayaUI:
         window = self.mainWindow
         self.mainWindow.show()
         print('UI opened')
+
 
     def setNamingConvention(self):
         """

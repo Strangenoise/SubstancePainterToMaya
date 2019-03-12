@@ -128,18 +128,17 @@ def getMapFromName(mapName, renderer):
         else:
             return 0
 
-def createTextures(ui, foundTextures, renderer):
+def listTextures(ui, foundFiles):
 
-    allTextures = []
+    foundTextures = []
     mapsFound = []
-    layoutPosition = 0
 
     texturePath = ui.texturePath.text()
 
     # Extract elements from naming convention
     textureSetPos, textureSetSeparator, mapPos, mapPosSeparator = extractFromNomenclature(ui)
 
-    for texture in foundTextures:
+    for texture in foundFiles:
 
         # Create the texture path
         filePath = os.path.join(texturePath, texture)
@@ -152,9 +151,6 @@ def createTextures(ui, foundTextures, renderer):
             # If its a valid texture file
             if extension in ui.PAINTER_IMAGE_EXTENSIONS:
 
-                # Add item to all textures
-                allTextures.append(texture)
-
                 # Get map's name from texture's name
                 try:
                     mapName = texture.split(mapPosSeparator)[mapPos].split('.')[0]
@@ -166,6 +162,7 @@ def createTextures(ui, foundTextures, renderer):
                     # If the map name is not already listed (e.i: baseColor)
                     if mapName not in mapsFound:
 
+                        # Create map object
                         map = foundMap()
                         map.textureName = texture
                         map.filePath = filePath
@@ -174,24 +171,102 @@ def createTextures(ui, foundTextures, renderer):
                         # Get associated attribute name
                         map.mapName = getMapFromName(mapName)
 
-                        # Add the map to found maps
-                        mapsFound.append(mapName)
+                        # Add map to foundTextures
+                        foundTextures.append(map)
 
-                        # Create the layout
-                        foundMapsSubLayout2 = QtWidgets.QHBoxLayout()
-                        ui.foundMapsLayout.insertLayout(layoutPosition, foundMapsSubLayout2, stretch=1)
+    return foundTextures
 
-                        # Create the widgets
-                        map1 = QtWidgets.QLineEdit(mapName)
-                        foundMapsSubLayout2.addWidget(map1)
+def populateFoundMaps(ui, renderer, foundTextures):
 
-                        map1Menu = QtWidgets.QComboBox()
-                        map1Menu.addItems(renderer.mapsList)
-                        map1Menu.setCurrentIndex(map.mapName)
-                        foundMapsSubLayout2.addWidget(map1Menu)
+    layoutPosition = 0
 
-                        # Add element to map found elements
-                        mapsFoundElements.append([map1, map1Menu])
+    if foundTextures:
+        for foundTexture in foundTextures:
 
-                        # Increment layout position
-                        layoutPosition += 1
+            # Create the layout
+            foundMapsSubLayout2 = QtWidgets.QHBoxLayout()
+            ui.foundMapsLayout.insertLayout(layoutPosition, foundMapsSubLayout2, stretch=1)
+
+            # Create the widgets
+            map1 = QtWidgets.QLineEdit(foundTexture.textureName)
+            foundMapsSubLayout2.addWidget(map1)
+
+            map1Menu = QtWidgets.QComboBox()
+            map1Menu.addItems(renderer.mapsList)
+            map1Menu.setCurrentIndex(foundTexture.mapName)
+            foundMapsSubLayout2.addWidget(map1Menu)
+
+            # Add ui element to map
+            foundTexture.lineText = map1
+            foundTexture.comboBox = map1Menu
+
+            # Increment layout position
+            layoutPosition += 1
+
+    else:
+        # Create the layout
+        foundMapsSubLayout2 = QtWidgets.QHBoxLayout()
+        ui.foundMapsLayout.insertLayout(layoutPosition, foundMapsSubLayout2, stretch=1)
+
+        # Create the widgets
+        map1 = QtWidgets.QLineEdit('No texture found, \ncheck Texture Folder and Naming Convention')
+        foundMapsSubLayout2.addWidget(map1)
+
+def displaySecondPartOfUI(ui, renderer):
+
+    # Display second part of the interface
+    ui.grpFoundMaps.setVisible(True)
+    ui.grpOptions.setVisible(True)
+
+    arnoldUIElements = ui.arnoldUIElements
+    vrayUIElements = ui.vrayUIElements
+    rendermanUIElements = ui.rendermanUIElements
+
+    if renderer.name == 'Arnold':
+        for item in vrayUIElements:
+            item.setVisible(False)
+
+        for item in rendermanUIElements:
+            item.setVisible(False)
+
+        for item in arnoldUIElements:
+            item.setVisible(True)
+
+    elif renderer.name == 'Vray':
+        for item in arnoldUIElements:
+            item.setVisible(False)
+
+        for item in rendermanUIElements:
+            item.setVisible(False)
+
+        for item in vrayUIElements:
+            item.setVisible(True)
+
+    elif renderer.name == 'PxrSurface' or renderer.name == 'PxrDisney':
+        for item in arnoldUIElements:
+            item.setVisible(False)
+
+        for item in vrayUIElements:
+            item.setVisible(False)
+
+        for item in rendermanUIElements:
+            item.setVisible(True)
+
+    ui.grpProceed.setVisible(True)
+    ui.launchButton.setText('Re-launch')
+
+def clearLayout(layout):
+    """
+    Empty specified pySide2 layout
+    :param layout: Layout to clear
+    :return: None
+    """
+
+    if layout is not None:
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+            else:
+                clearLayout(item.layout())

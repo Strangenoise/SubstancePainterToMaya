@@ -122,6 +122,8 @@ def SPtoM():
 
 def launch(ui):
 
+    print('\n LAUNCH \n')
+
     allTextures = []
 
     # Create the renderer
@@ -131,7 +133,51 @@ def launch(ui):
 
     # Get all the texture files
     texturePath = ui.texturePath.text()
-    foundTextures = os.listdir(texturePath)
+    foundFiles = os.listdir(texturePath)
+
+    # Create all the map objects
+    foundTextures = helper.listTextures(ui, renderer, foundFiles)
+
+    # Remove elements from FoundMaps
+    helper.clearLayout(ui.foundMapsLayout)
+
+    # Populate the UI with the maps
+    helper.populateFoundMaps(ui, renderer, foundTextures)
+
+    # Display second part of the UI
+    helper.displaySecondPartOfUI(ui, renderer)
+
+    # Add connect to the proceed button
+    ui.proceedButton.clicked.connect(lambda: proceed(ui, foundTextures, renderer))
+
+def proceed(ui, foundTextures, renderer):
+
+    print('\n PROCEED \n')
+
+    # Create and connect the textures
+    for foundTexture in foundTextures:
+
+        # Find shader
+        shader = helper.getShader(ui, foundTexture, renderer)
+
+        print('Shader used is ' + shader)
+
+        # Create file node and 2dPlacer
+        fileNode = helper.createFileNode(foundTexture)
+
+        print('File node created')
+
+        # Connect connect file node
+        connected = helper.connectFileNode(ui, foundTexture, renderer)
+
+        if connected == True:
+            print(foundTexture.textureName + ' connected')
+
+        else:
+            print(foundTexture.textureName + ' not connected')
+
+    # Add subdivisions
+
 
 
 
