@@ -161,6 +161,7 @@ For more usual maps, the parameters are already set (but you can change them if 
 1. Usable with Renderman
 2. Choose the shader to use (I.e: aiStandardHair, aiStandardVolume...)
 3. Add UDIMs option
+4. Don't create nodes if they're not needed
 
 ## Credits
 
