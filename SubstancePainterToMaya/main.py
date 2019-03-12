@@ -41,10 +41,8 @@ import os
 import maya.cmds as mc
 import maya.OpenMaya as om
 import UI as ui
-import launch as mainLaunch
 import helper
 reload(ui)
-reload(mainLaunch)
 reload(helper)
 
 # Variables
@@ -67,7 +65,7 @@ toolUI.launchButton.clicked.connect(lambda: launch(toolUI))
 class rendererObject:
 
     def __init__(self):
-        self.renderer = 'Arnold'
+        self.name = 'Arnold'
 
     def define(self):
 
@@ -75,25 +73,25 @@ class rendererObject:
         if self.ui.grpRadioRenderer.checkedId() == -2:
             import config_mtoa as config
             reload(config)
-            self.renderer = 'Arnold'
+            self.name = 'Arnold'
             print 'Arnold'
 
         elif self.ui.grpRadioRenderer.checkedId() == -3:
             import config_vray as config
             reload(config)
-            self.renderer = 'Vray'
+            self.name = 'Vray'
             print 'Vray'
 
         elif self.ui.grpRadioRenderer.checkedId() == -4:
             import config_renderman_pxrdisney as config
             reload(config)
-            self.renderer = 'PxrDisney'
+            self.name = 'PxrDisney'
             print 'Renderman - PxrDisney'
 
         elif self.ui.grpRadioRenderer.checkedId() == -5:
             import config_renderman_pxrsurface as config
             reload(config)
-            self.renderer = 'PxrSurface'
+            self.name = 'PxrSurface'
             print 'Renderman - PxrSurface'
 
         self.mapsList = config.MAP_LIST
@@ -114,128 +112,29 @@ class rendererObject:
         self.subsurface = config.SUBSURFACE
         self.emission = config.EMISSION
 
-def launch(toolUI):
-    """
-        Check for the chosen renderer
-        Load specific config file
-        Display second part of interface
-        Launch the texture check
-        :return: None
-        """
 
-    print '\nLAUNCH\n'
+def SPtoM():
 
-    mapsFound = []
-    layoutPosition = 1
+    # Create the UI
+    toolUI = ui.PainterToMayaUI()
+    toolUI.createUI()
+    toolUI.launchButton.clicked.connect(lambda: launch(toolUI))
+
+def launch(ui):
+
     allTextures = []
-    mapsFoundElements = []
 
-    # Create renderer
+    # Create the renderer
     renderer = rendererObject()
     renderer.ui = ui
     renderer.define()
 
-    # Set variables
-
-    # Display second part of the interface
-    ui.grpFoundMaps.setVisible(True)
-    ui.grpOptions.setVisible(True)
-
-    arnoldUIElements = [ui.checkbox5, ui.subdivIterTitle, ui.subdivIter, ui.subdivTypeTitle, ui.subdivType]
-    vrayUIElements = [ui.checkbox6, ui.subdivIterVrayTitle, ui.subdivIterVray, ui.subdivMaxVrayTitle,
-                      ui.maxSubdivIterVray]
-    rendermanUIElements = []
-
-    if renderer == 'Arnold':
-        for item in vrayUIElements:
-            item.setVisible(False)
-
-        for item in rendermanUIElements:
-            item.setVisible(False)
-
-        for item in arnoldUIElements:
-            item.setVisible(True)
-
-    elif renderer == 'Vray':
-        for item in arnoldUIElements:
-            item.setVisible(False)
-
-        for item in rendermanUIElements:
-            item.setVisible(False)
-
-        for item in vrayUIElements:
-            item.setVisible(True)
-
-    elif renderer == 'PxrSurface' or renderer == 'PxrDisney':
-        for item in arnoldUIElements:
-            item.setVisible(False)
-
-        for item in vrayUIElements:
-            item.setVisible(False)
-
-        for item in rendermanUIElements:
-            item.setVisible(True)
-
-    ui.grpProceed.setVisible(True)
-    ui.launchButton.setText('Re-launch')
-
-    clearLayout(ui.foundMapsLayout)
-
-    # Populate the Found Maps part
-    populateFoundMaps()
-
-    ui.checkbox5.stateChanged.connect(lambda: ui.addArnoldSubdivisionsCheckbox())
-    ui.checkbox6.stateChanged.connect(lambda: ui.addVraySubdivisionsCheckbox())
-
-    return renderer
-
-    toolUI.proceedButton.clicked.connect(lambda: main(launcher))
-
-def main(launcher):
-
-    print '\nPROCEED\n'
-
-    # Check if the textures need to be forced
-    if toolUI.checkbox3.isChecked():
-        forceTexture = True
-    else:
-        forceTexture = False
-
-    # Get all textures
-    for item in launcher.allTextures:
-
-        # Create the texture path
-        itemPath = os.path.join(toolUI.texturePath.text(), item)
-        itemPath.replace('\\', '/')
-
-        # For all maps name found
-        for mapFound in launcher.mapsFound:
-            if mapFound in item:
-
-                # Get attributes from map name
-                attributeName, attributeIndex = launcher.getShaderAttributeFromMapName(mapFound)
-
-                if attributeIndex not in launcher.mapsDontUseIds:
-
-                    material = launcher.getMaterialFromName(item)
-
-                    # Check for material or create one
-                    material, materialNotFound = launcher.checkOrCreateMaterial(material)
-
-                    if materialNotFound:
-                        print material + ' not found'
-
-                    # If the material is found
-                    else:
-                        if mc.objExists(material):
-                            launcher.connect(material, mapFound, itemPath, attributeName, attributeIndex,
-                                           forceTexture)
+    # Get all the texture files
+    texturePath = ui.texturePath.text()
+    foundTextures = os.listdir(texturePath)
 
 
-                else:
-                    print item + ' not used'
 
-    print 'FINISHED'
 
 
 

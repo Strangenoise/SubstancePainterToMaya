@@ -13,6 +13,7 @@ MAP_LIST = [
     '---- Matte', 'matteColor', 'matteOpacity',
     '---- Don\'t use'
 ]
+
 MAP_LIST_REAL_ATTRIBUTES = [
     '---- Choose', 'baseColor', 'normalCamera', 'metalness', 'normalCamera', 'specularRoughness',
     '---- Base', 'base', 'baseColor', 'diffuseRoughness', 'metalness',

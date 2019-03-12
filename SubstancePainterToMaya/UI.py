@@ -52,7 +52,7 @@ class PainterToMayaUI:
         self.layHMainWindowMain.insertLayout(1, self.layVMainWindow02, stretch=1)
 
         # Texture Folder
-        self.grpBrowseForDirectory = QtWidgets.QGroupBox('Texture Folder')
+        self.grpBrowseForDirectory = QtWidgets.QGroupBox('Textures Folder')
         self.layVMainWindow01.addWidget(self.grpBrowseForDirectory)
 
         self.textureFolderLayout = QtWidgets.QHBoxLayout()
@@ -326,7 +326,12 @@ class PainterToMayaUI:
             sourceImages = projectDirectory
 
         # Open a file dialog
-        workDirectory = mc.fileDialog2(startingDirectory=sourceImages, fileMode=2, okCaption='Select')[0]
+        result = mc.fileDialog2(startingDirectory=self.texturePath.text(), fileMode=2, okCaption='Select')
+
+        if result is None:
+            return
+
+        workDirectory = result[0]
 
         # Update the texture path in the interface
         self.texturePath.setText(workDirectory)
