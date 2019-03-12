@@ -1,4 +1,7 @@
 import maya.cmds as mc
+import os
+from PySide2 import QtCore
+from PySide2 import QtWidgets
 
 def createFileNode(material, mapFound, itemPath):
     """
@@ -106,3 +109,331 @@ def createDisplacementMap(material, forceTexture, imageNode, colorCorrect=False)
         # Connect the displacement node to all the found shading engines
         mc.connectAttr(displaceNode + '.displacement',
                        shadingGroup + '.displacementShader', force=forceTexture)
+
+def clearLayout(layout):
+    """
+    Empty specified pySide2 layout
+    :param layout: Layout to clear
+    :return: None
+    """
+
+    if layout is not None:
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+            else:
+                clearLayout(item.layout())
+
+def getMapFromName(mapName, renderer):
+    """
+    Check if the map name correspond to a known attribute
+    :param mapName: The name of the map
+    :return: Index of the associated attribute
+    """
+
+    # Check for the render engine and load config file
+    if renderer.renderer == 'Arnold':
+        if mapName in renderer.baseColor:
+            return 1
+        elif mapName in renderer.height:
+            return 2
+        elif mapName in renderer.metalness:
+            return 3
+        elif mapName in renderer.normal:
+            return 4
+        elif mapName in renderer.roughness:
+            return 5
+        elif mapName in renderer.matte:
+            return 54
+        elif mapName in renderer.opacity:
+            return 49
+        elif mapName in renderer.subsurface:
+            return 28
+        elif mapName in renderer.emission:
+            return 44
+        else:
+            return 0
+
+    elif renderer.renderer == 'Vray':
+        if mapName in renderer.baseColor:
+            return 1
+        elif mapName in renderer.height:
+            return 2
+        elif mapName in renderer.metalness:
+            return 3
+        elif mapName in renderer.normal:
+            return 5
+        elif mapName in renderer.roughness:
+            return 4
+        elif mapName in renderer.opacity:
+            return 10
+        elif mapName in renderer.subsurface:
+            return 35
+        else:
+            return 0
+
+    elif renderer.renderer == 'PxrDisney':
+        if mapName in renderer.baseColor:
+            return 1
+        elif mapName in renderer.height:
+            return 15
+        elif mapName in renderer.metalness:
+            return 5
+        elif mapName in renderer.normal:
+            return 15
+        elif mapName in renderer.roughness:
+            return 8
+        elif mapName in renderer.subsurface:
+            return 4
+        else:
+            return 0
+
+    elif renderer.renderer == 'PxrSurface':
+        if mapName in renderer.baseColor:
+            return 1
+        elif mapName in renderer.height:
+            return 2
+        elif mapName in renderer.metalness:
+            return 4
+        elif mapName in renderer.normal:
+            return 3
+        elif mapName in renderer.roughness:
+            return 5
+        elif mapName in renderer.opacity:
+            return 87
+        elif mapName in renderer.subsurface:
+            return 61
+        else:
+            return 0
+
+def createMaterial(material, materialToUse):
+
+    # Create the material
+    material = mc.shadingNode(materialToUse, asShader=True, name=material + '_shd')
+
+    return material
+
+def createShadingGroup( material):
+
+    shadingEngineName = material.replace('_shd', '_SG')
+    shadingEngine = mc.shadingNode('shadingEngine', asPostProcess=True, name=shadingEngineName)
+
+    return shadingEngine
+
+def connect(material, mapFound, itemPath, attributeName, attributeIndex, forceTexture, renderer, ui):
+
+    # Check for the render engine and load config file
+    if renderer.renderer == 'Arnold':
+        import helper_arnold as helper
+        reload(helper)
+
+    elif renderer.renderer == 'Vray':
+        import helper_vray as helper
+        reload(helper)
+
+    elif renderer.renderer == 'PxrDisney' or renderer.renderer == 'PxrSurface':
+        import helper_renderman as helper
+        reload(helper)
+
+    connect(material, mapFound, itemPath, attributeName, attributeIndex, forceTexture, ui)
+
+
+def createMaterialAndShadingGroup(material, renderer):
+    """
+    Create a material and it's shading group
+    :param material: The material's name
+    :return: The material's name
+    """
+
+    # Create the material
+    material = createMaterial(material, renderer.shaderToUse)
+
+    # Create the shading group
+    shadingEngine = createShadingGroup(material)
+
+    # Connect the material to the shading group
+    mc.connectAttr(material + '.outColor', shadingEngine + '.surfaceShader')
+
+    return material
+
+def checkOrCreateMaterial(material, ui, renderer):
+    """
+    Based on the interface options, create or use existing materials
+    :param material: The material's name
+    :return: The material's name, if the material was found
+    """
+
+    materialNotFound = False
+
+    # If create new materials if they doesn't exist, instead use existing ones
+    if ui.grpRadioMaterials.checkedId() == -2:
+
+        # If the material doesn't exist or if it's not of the right type
+        if not mc.objExists(material) or not mc.objectType(material) == renderer.shaderToUse:
+
+            # If a '_shd' version of the material doesn't exist
+            if not mc.objExists(material + '_shd'):
+
+                # Create the material
+                material = createMaterialAndShadingGroup(material)
+
+            else:
+
+                # Or add '_shd' at the name of the material
+                material += '_shd'
+
+    # If create new ones
+    elif ui.grpRadioMaterials.checkedId() == -3:
+
+        # If the '_shd' version of the material doesn't exist
+        if not mc.objExists(material + '_shd'):
+
+            # Create the material
+            material = createMaterialAndShadingGroup(material)
+
+        else:
+
+            # Or add '_shd' at the name of the material
+            material += '_shd'
+
+    # If use existing ones
+    elif ui.grpRadioMaterials.checkedId() == -4:
+
+        # If the material doesn't exist or if it's not of the right type
+        if not mc.objExists(material) or not mc.objectType(material) == renderer.shaderToUse:
+            # Specify that the material was not found
+            materialNotFound = True
+
+    return material, materialNotFound
+
+def getMaterialFromName( name):
+    """
+    Get material's name from texture's name
+    :param name: Name of the texture
+    :return: The name of the material
+    """
+
+    # Extract from naming convention
+    textureSetPos, textureSetSeparator, mapPos, mapPosSeparator = extractFromNomenclature()
+
+    # Get the name from naming convention
+    materialName = name.split(textureSetSeparator)[textureSetPos].split('.')[0]
+
+    return materialName
+
+def getShaderAttributeFromMapName(mapName, renderer):
+    """
+    From the map name, find the right material attribute to use
+    :param mapName: The texture map's name
+    :return: The name of the material attribute, the index of the material attribute
+    """
+
+    # For all the maps found elements
+    for element in renderer.mapsFoundElements:
+
+        # If the name of the element matches the texture's name
+        if element[0].text() == mapName:
+            # Get the attribute name and exist the loop
+            attrName = renderer.mapsListRealAttributes[element[1].currentIndex()]
+            break
+
+    return attrName, element[1].currentIndex()
+
+def extractFromNomenclature(ui):
+    """
+    Check for the naming convention specified in the interface and extract elements
+    :return: position of the texture set, separator of the texture set, position of the map, separator of the map
+    """
+
+    textureSetPos = mapPos = 0
+    textureSetSeparator = mapPosSeparator = '_'
+
+    # For each delimiter
+    for delimiter in ui.delimiters:
+
+        # Split the specified naming convention
+        parts = ui.namingConvention.text().split(delimiter)
+
+        # If there's a split
+        if len(parts) > 1:
+
+            # For each split
+            for i in range(0, len(parts)):
+
+                # If the split is <textureSet>
+                if parts[i] == '$textureSet':
+                    textureSetPos = i
+                    textureSetSeparator = delimiter
+
+                # Elif the split is <map>
+                elif parts[i] == '$map':
+                    mapPos = i
+                    mapPosSeparator = delimiter
+
+    return textureSetPos, textureSetSeparator, mapPos, mapPosSeparator
+
+def populateFoundMaps(ui):
+    """
+    For all the texture files in the texture folder, create widgets in Found Maps part of the interface
+    :return: None
+    """
+
+    # Extract elements from naming convention
+    textureSetPos, textureSetSeparator, mapPos, mapPosSeparator = extractFromNomenclature()
+
+    # List texture folder elements
+    textureContent = os.listdir(ui.texturePath.text())
+
+    layoutPosition = 0
+
+    for item in textureContent:
+
+        # Create the texture path
+        itemPath = os.path.join(ui.texturePath.text(), item)
+
+        # If item is a file
+        if os.path.isfile(itemPath):
+
+            # Get item's extension
+            itemExtension = item.split('.')[1]
+
+            # If its a valid texture file
+            if itemExtension in ui.PAINTER_IMAGE_EXTENSIONS:
+
+                # Add item to all textures
+                allTextures.append(item)
+
+                # Get map's name from texture's name
+                try:
+                    mapName = item.split(mapPosSeparator)[mapPos].split('.')[0]
+                except:
+                    mapName = None
+
+                # If the map name is not already listed (e.i: baseColor)
+                if mapName and mapName not in mapsFound:
+                    # Get associated attribute name
+                    correctMap = getMapFromName(mapName)
+
+                    # Add the map to found maps
+                    mapsFound.append(mapName)
+
+                    # Create the layout
+                    foundMapsSubLayout2 = QtWidgets.QHBoxLayout()
+                    ui.foundMapsLayout.insertLayout(layoutPosition, foundMapsSubLayout2, stretch=1)
+
+                    # Create the widgets
+                    map1 = QtWidgets.QLineEdit(mapName)
+                    foundMapsSubLayout2.addWidget(map1)
+
+                    map1Menu = QtWidgets.QComboBox()
+                    map1Menu.addItems(mapsList)
+                    map1Menu.setCurrentIndex(correctMap)
+                    foundMapsSubLayout2.addWidget(map1Menu)
+
+                    # Add element to map found elements
+                    mapsFoundElements.append([map1, map1Menu])
+
+                    # Increment layout position
+                    layoutPosition += 1

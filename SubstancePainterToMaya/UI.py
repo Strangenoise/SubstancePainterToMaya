@@ -4,6 +4,7 @@ from shiboken2 import wrapInstance
 from maya import OpenMayaUI as omui
 import maya.cmds as mc
 import os
+import config as cfg
 
 class PainterToMayaUI:
 
@@ -11,6 +12,14 @@ class PainterToMayaUI:
 
         self.actualWorkspace = mc.workspace(fullName=True)
         self.PLUGIN_NAME = self.PLUGIN_VERSION = self.TEXTURE_FOLDER = ''
+        self.PLUGIN_NAME = cfg.PLUGIN_NAME
+        self.PLUGIN_VERSION = cfg.PLUGIN_VERSION
+        self.TEXTURE_FOLDER = cfg.TEXTURE_FOLDER
+        self.INFOS = cfg.INFOS
+        self.PAINTER_IMAGE_EXTENSIONS = cfg.PAINTER_IMAGE_EXTENSIONS
+        self.DELIMITERS = cfg.DELIMITERS
+
+        print('\n\n' + self.PLUGIN_NAME + ' version ' + self.PLUGIN_VERSION + '\n')
 
     def createUI(self):
         """

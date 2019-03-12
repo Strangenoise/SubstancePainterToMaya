@@ -38,36 +38,156 @@
 
 # Libraries
 import os
-import config as cfg
 import maya.cmds as mc
 import maya.OpenMaya as om
 import UI as ui
 import launch as mainLaunch
+import helper
 reload(ui)
 reload(mainLaunch)
+reload(helper)
 
 # Variables
 toolUI = ui.PainterToMayaUI()
-toolUI.PLUGIN_NAME = cfg.PLUGIN_NAME
-toolUI.PLUGIN_VERSION = cfg.PLUGIN_VERSION
-toolUI.TEXTURE_FOLDER = cfg.TEXTURE_FOLDER
-toolUI.INFOS = cfg.INFOS
-toolUI.PAINTER_IMAGE_EXTENSIONS = cfg.PAINTER_IMAGE_EXTENSIONS
-
-print('\n\n' + cfg.PLUGIN_NAME + ' version ' + cfg.PLUGIN_VERSION + '\n')
-
 toolUI.createUI()
 
 # Add action to launch button
-toolUI.launchButton.clicked.connect(lambda: launch())
+toolUI.launchButton.clicked.connect(lambda: launch(toolUI))
 
-def launch():
+###################################
+#
+# Needed objects
+#
+# UI - ok
+# Texture
+# Renderer - ok
+#
+###################################
 
-    launcher = mainLaunch.launcher()
-    launcher.ui = toolUI
-    launcher.delimiters = cfg.DELIMITERS
-    launcher.PAINTER_IMAGE_EXTENSIONS = cfg.PAINTER_IMAGE_EXTENSIONS
-    launcher.launch()
+class rendererObject:
+
+    def __init__(self):
+        self.renderer = 'Arnold'
+
+    def define(self):
+
+        # Check for the render engine and load config file
+        if self.ui.grpRadioRenderer.checkedId() == -2:
+            import config_mtoa as config
+            reload(config)
+            self.renderer = 'Arnold'
+            print 'Arnold'
+
+        elif self.ui.grpRadioRenderer.checkedId() == -3:
+            import config_vray as config
+            reload(config)
+            self.renderer = 'Vray'
+            print 'Vray'
+
+        elif self.ui.grpRadioRenderer.checkedId() == -4:
+            import config_renderman_pxrdisney as config
+            reload(config)
+            self.renderer = 'PxrDisney'
+            print 'Renderman - PxrDisney'
+
+        elif self.ui.grpRadioRenderer.checkedId() == -5:
+            import config_renderman_pxrsurface as config
+            reload(config)
+            self.renderer = 'PxrSurface'
+            print 'Renderman - PxrSurface'
+
+        self.mapsList = config.MAP_LIST
+        self.mapsListRealAttributes = config.MAP_LIST_REAL_ATTRIBUTES
+        self.mapsListColorAttributesIndices = config.MAP_LIST_COLOR_ATTRIBUTES_INDICES
+        self.mapsDontUseIds = config.DONT_USE_IDS
+        self.shaderToUse = config.SHADER_TO_USE
+        self.normalNode = config.NORMAL_NODE
+        self.bumpNode = config.BUMP_NODE
+
+        self.baseColor = config.BASE_COLOR
+        self.height = config.HEIGHT
+        self.metalness = config.METALNESS
+        self.normal = config.NORMAL
+        self.roughness = config.ROUGHNESS
+        self.matte = config.MATTE
+        self.opacity = config.OPACITY
+        self.subsurface = config.SUBSURFACE
+        self.emission = config.EMISSION
+
+def launch(toolUI):
+    """
+        Check for the chosen renderer
+        Load specific config file
+        Display second part of interface
+        Launch the texture check
+        :return: None
+        """
+
+    print '\nLAUNCH\n'
+
+    mapsFound = []
+    layoutPosition = 1
+    allTextures = []
+    mapsFoundElements = []
+
+    # Create renderer
+    renderer = rendererObject()
+    renderer.ui = ui
+    renderer.define()
+
+    # Set variables
+
+    # Display second part of the interface
+    ui.grpFoundMaps.setVisible(True)
+    ui.grpOptions.setVisible(True)
+
+    arnoldUIElements = [ui.checkbox5, ui.subdivIterTitle, ui.subdivIter, ui.subdivTypeTitle, ui.subdivType]
+    vrayUIElements = [ui.checkbox6, ui.subdivIterVrayTitle, ui.subdivIterVray, ui.subdivMaxVrayTitle,
+                      ui.maxSubdivIterVray]
+    rendermanUIElements = []
+
+    if renderer == 'Arnold':
+        for item in vrayUIElements:
+            item.setVisible(False)
+
+        for item in rendermanUIElements:
+            item.setVisible(False)
+
+        for item in arnoldUIElements:
+            item.setVisible(True)
+
+    elif renderer == 'Vray':
+        for item in arnoldUIElements:
+            item.setVisible(False)
+
+        for item in rendermanUIElements:
+            item.setVisible(False)
+
+        for item in vrayUIElements:
+            item.setVisible(True)
+
+    elif renderer == 'PxrSurface' or renderer == 'PxrDisney':
+        for item in arnoldUIElements:
+            item.setVisible(False)
+
+        for item in vrayUIElements:
+            item.setVisible(False)
+
+        for item in rendermanUIElements:
+            item.setVisible(True)
+
+    ui.grpProceed.setVisible(True)
+    ui.launchButton.setText('Re-launch')
+
+    clearLayout(ui.foundMapsLayout)
+
+    # Populate the Found Maps part
+    populateFoundMaps()
+
+    ui.checkbox5.stateChanged.connect(lambda: ui.addArnoldSubdivisionsCheckbox())
+    ui.checkbox6.stateChanged.connect(lambda: ui.addVraySubdivisionsCheckbox())
+
+    return renderer
 
     toolUI.proceedButton.clicked.connect(lambda: main(launcher))
 
