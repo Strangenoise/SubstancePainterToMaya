@@ -49,7 +49,6 @@ import maya.OpenMaya as om
 # Variables
 PLUGIN_NAME = cfg.PLUGIN_NAME
 PLUGIN_VERSION = cfg.PLUGIN_VERSION
-TEXTURE_FOLDER = cfg.TEXTURE_FOLDER
 PAINTER_IMAGE_EXTENSIONS = cfg.PAINTER_IMAGE_EXTENSIONS
 
 
@@ -472,10 +471,13 @@ class PainterToMaya:
                     self.allTextures.append(item)
 
                     # Get map's name from texture's name
-                    mapName = item.split(mapPosSeparator)[mapPos].split('.')[0]
+                    try:
+                        mapName = item.split(mapPosSeparator)[mapPos].split('.')[0]
+                    except:
+                        mapName = None
 
                     # If the map name is not already listed (e.i: baseColor)
-                    if mapName not in self.mapsFound:
+                    if mapName and mapName not in self.mapsFound:
 
                         # Get associated attribute name
                         correctMap = self.getMapFromName(mapName)
