@@ -2,12 +2,14 @@ import maya.cmds as mc
 import helper
 reload(helper)
 
-def addArnoldSubdivisions(material, ui):
+def addSubdivisions(ui, texture):
     """
     Add render subdivisions of a certain type
     :param material: The material used to find which shapes to subdivide
     :return: None
     """
+
+    material = texture.textureSet
 
     # Get values from interface
     subdivType = ui.subdivType.currentIndex() + 1
@@ -24,7 +26,7 @@ def addArnoldSubdivisions(material, ui):
             mc.setAttr(mesh + '.aiSubdivType', subdivType)
             mc.setAttr(mesh + '.aiSubdivIterations', int(iterations))
 
-def createArnoldNormalMap(material, attributeName, forceTexture, imageNode, normalNode, bumpNode, colorCorrect):
+def createNormalMap(texture, renderer, fileNode, colorCorrect, forceTexture=True):
     """
     Connect the normal map with the right nodes, even if a bump already exists
     :param material: The name of the material
@@ -34,11 +36,16 @@ def createArnoldNormalMap(material, attributeName, forceTexture, imageNode, norm
     :return: None
     """
 
+    normalNode = renderer.renderParameters.NORMAL_NODE
+    bumpNode = renderer.renderParameters.BUMP_NODE
+    material = texture.textureSet
+    attributeName = texture.materialAttribute
+
     # Create the normal utility
     normalNode = mc.shadingNode(normalNode, asUtility=True)
 
     # Connect the file node to the normal utility node
-    helper.connectTexture(imageNode, '.outColor', normalNode, '.input', colorCorrect)
+    helper.connectTexture(fileNode, 'outColor', normalNode, 'input', colorCorrect)
 
     # List the connections in the material input attribute
     connectedNodes = mc.listConnections(material + '.' + attributeName)
@@ -82,7 +89,7 @@ def createArnoldNormalMap(material, attributeName, forceTexture, imageNode, norm
         mc.connectAttr(normalNode + '.outValue', material + '.' + attributeName,
                        force=forceTexture)
 
-def createArnoldBumpMap(material, attributeName, forceTexture, imageNode, normalNode, bumpNode, colorCorrect):
+def createBumpMap(texture, renderer, fileNode, colorCorrect, forceTexture=True):
     """
     Connect the bump map with the right nodes, even if a normal map already exists
     :param material: The name of the material
@@ -92,11 +99,16 @@ def createArnoldBumpMap(material, attributeName, forceTexture, imageNode, normal
     :return: None
     """
 
+    normalNode = renderer.renderParameters.NORMAL_NODE
+    bumpNode = renderer.renderParameters.BUMP_NODE
+    material = texture.textureSet
+    attributeName = texture.materialAttribute
+
     # Create the bump utility node
     bumpNode = mc.shadingNode(bumpNode, asUtility=True)
 
     # Connect the file node to the bump utility node
-    helper.connectTexture(imageNode, '.outColorR', bumpNode, '.bumpMap', colorCorrect)
+    helper.connectTexture(fileNode, 'outColorR', bumpNode, 'bumpMap', colorCorrect)
 
     # List all the connection in the material attribute
     connectedNodes = mc.listConnections(material + '.' + attributeName)
@@ -110,7 +122,7 @@ def createArnoldBumpMap(material, attributeName, forceTexture, imageNode, normal
             if mc.objectType(node) == normalNode:
 
                 # Connect the normal utility node to to bump utility
-                mc.connectAttr(node + '.outValue', material + '.normal',
+                mc.connectAttr(node + '.outValue', bumpNode + '.normal',
                                force=forceTexture)
 
                 # Connect the bump node to the material attribute
@@ -131,44 +143,39 @@ def createArnoldBumpMap(material, attributeName, forceTexture, imageNode, normal
         mc.connectAttr(bumpNode + '.outValue', material + '.' + attributeName,
                        force=forceTexture)
 
-def connect(material, mapFound, itemPath, attributeName, attributeIndex, forceTexture, ui, launcher):
-    # Add subdivisions
-    if ui.checkbox5.isChecked():
-        addArnoldSubdivisions(material, ui)
+def connect(ui, texture, renderer, fileNode):
 
-    # Create file node
-    imageNode = helper.createFileNode(material, mapFound, itemPath)
+    colorCorrect = ui.checkbox4.isChecked()
+    useBump = ui.checkbox1.isChecked()
+    useDisplace = ui.checkbox2.isChecked()
 
     # Change file node parameters to Raw and add alphaIsLuminance
-    if attributeName is not 'baseColor':
+    if texture.materialAttribute is not 'baseColor':
         try:
-            mc.setAttr(imageNode + '.colorSpace', 'Raw', type='string')
+            mc.setAttr(fileNode + '.colorSpace', 'Raw', type='string')
         except:
             pass
-        mc.setAttr(imageNode + '.alphaIsLuminance', True)
+        mc.setAttr(fileNode + '.alphaIsLuminance', True)
 
-    # Specify the output attribute to use for the file nodes
-    if attributeIndex in launcher.mapsListColorAttributesIndices:
-        outputAttr = 'outColor'
-    else:
-        outputAttr = 'outColorR'
+    # If height or normalMap
+    if texture.materialAttribute == 'normalCamera':
 
-    # If height
-    if attributeName == 'normalCamera' and outputAttr == 'outColorR':
+        # If height
+        if texture.output == 'outColorR':
 
-        # If bump
-        if ui.checkbox1.isChecked():
-            createArnoldBumpMap(material, attributeName, forceTexture, imageNode, launcher.normalNode, launcher.bumpNode, ui.checkbox4.isChecked())
+            # If bump
+            if useBump:
+                createBumpMap(texture, renderer, fileNode, colorCorrect)
 
-        # If displace
-        if ui.checkbox2.isChecked():
-            helper.createDisplacementMap(material, forceTexture, imageNode, ui.checkbox4.isChecked())
+            # If displace
+            if useDisplace:
+                helper.createDisplacementMap(texture, fileNode, colorCorrect)
 
-    # If normalMap
-    elif attributeName == 'normalCamera' and outputAttr == 'outColor':
+        # If normalMap
+        elif texture.output == 'outColor':
 
-        createArnoldNormalMap(material, attributeName, forceTexture, imageNode, launcher.normalNode, launcher.bumpNode, ui.checkbox4.isChecked())
+            createNormalMap(texture, renderer, fileNode, colorCorrect)
 
     # If it's another type of map
     else:
-        helper.connectTexture(imageNode, '.' + outputAttr, material, '.' + attributeName, ui.checkbox4.isChecked())
+        helper.connectTexture(fileNode, texture.output, texture.textureSet, texture.materialAttribute, colorCorrect)

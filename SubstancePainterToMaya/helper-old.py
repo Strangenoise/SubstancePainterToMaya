@@ -98,29 +98,6 @@ def connectTexture(textureNode, textureOutput, targetNode, targetInput, colorCor
     else:
         mc.connectAttr(textureNode + textureOutput, targetNode + targetInput, force=True)
 
-def createDisplacementMap(material, forceTexture, imageNode, colorCorrect=False):
-    """
-    Connect displacement to the right shading engine(s)
-    :param material: The name of the material
-    :param forceTexture: Specify if the texture connection is forced
-    :param imageNode: The file node to connect
-    :return: None
-    """
-
-    # Create a displacement node
-    displaceNode = mc.shadingNode('displacementShader', asShader=True)
-
-    # Connect the texture to the displacement node
-    connectTexture(imageNode, '.outColorR', displaceNode, '.displacement', colorCorrect)
-
-    # Get the shading engine associated with given material
-    shadingGroups = mc.listConnections(material + '.outColor')
-
-    for shadingGroup in shadingGroups:
-
-        # Connect the displacement node to all the found shading engines
-        mc.connectAttr(displaceNode + '.displacement',
-                       shadingGroup + '.displacementShader', force=forceTexture)
 
 def clearLayout(layout):
     """
@@ -168,8 +145,6 @@ def connect(material, mapFound, itemPath, attributeName, attributeIndex, forceTe
     elif renderer.renderer == 'PxrDisney' or renderer.renderer == 'PxrSurface':
         import helper_renderman as helper
         reload(helper)
-
-    connect(material, mapFound, itemPath, attributeName, attributeIndex, forceTexture, ui)
 
 
 def createMaterialAndShadingGroup(material, renderer):

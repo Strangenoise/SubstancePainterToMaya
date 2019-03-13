@@ -5,6 +5,7 @@ from maya import OpenMayaUI as omui
 import maya.cmds as mc
 import os
 import config as cfg
+reload(cfg)
 
 class PainterToMayaUI:
 
@@ -201,6 +202,8 @@ class PainterToMayaUI:
 
         self.checkbox5 = QtWidgets.QCheckBox('Add subdivisions')
         self.optionsSubLayout2.addWidget(self.checkbox5)
+        self.checkbox5.stateChanged.connect(lambda: self.addArnoldSubdivisionsCheckbox())
+
 
         self.subdivTypeTitle = QtWidgets.QLabel('Type')
         self.optionsSubLayout2.addWidget(self.subdivTypeTitle)
@@ -219,6 +222,7 @@ class PainterToMayaUI:
 
         self.checkbox6 = QtWidgets.QCheckBox('Add subdivisions')
         self.optionsSubLayout3.addWidget(self.checkbox6)
+        self.checkbox6.stateChanged.connect(lambda: self.addVraySubdivisionsCheckbox())
 
         self.subdivIterVrayTitle = QtWidgets.QLabel('Edge Length')
         self.optionsSubLayout3.addWidget(self.subdivIterVrayTitle)

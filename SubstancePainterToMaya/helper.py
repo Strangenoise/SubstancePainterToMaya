@@ -1,6 +1,7 @@
 import maya.cmds as mc
 import os
 from PySide2 import QtWidgets
+import re
 
 class foundMap:
 
@@ -12,6 +13,9 @@ class foundMap:
         mapOutput = ''
         shader = ''
 
+def splitTextureName(delimiters, textureName):
+
+    return re.split(delimiters, textureName)
 
 def extractFromNomenclature(ui):
     """
@@ -19,32 +23,19 @@ def extractFromNomenclature(ui):
     :return: position of the texture set, separator of the texture set, position of the map, separator of the map
     """
 
-    textureSetPos = mapPos = 0
-    textureSetSeparator = mapPosSeparator = '_'
+    textureSetPos = mapPos = i = 0
 
-    # For each delimiter
-    for delimiter in ui.DELIMITERS:
+    parts = splitTextureName(ui.DELIMITERS, ui.namingConvention.text())
 
-        # Split the specified naming convention
-        parts = ui.namingConvention.text().split(delimiter)
+    for part in parts:
+        if part == '$textureSet':
+            textureSetPos = i
+        elif part == '$map':
+            mapPos = i
 
-        # If there's a split
-        if len(parts) > 1:
+        i += 1
 
-            # For each split
-            for i in range(0, len(parts)):
-
-                # If the split is <textureSet>
-                if parts[i] == '$textureSet':
-                    textureSetPos = i
-                    textureSetSeparator = delimiter
-
-                # Elif the split is <map>
-                elif parts[i] == '$map':
-                    mapPos = i
-                    mapPosSeparator = delimiter
-
-    return textureSetPos, textureSetSeparator, mapPos, mapPosSeparator
+    return textureSetPos, mapPos, len(parts)
 
 def getMapFromName(mapName, renderer):
     """
@@ -53,30 +44,14 @@ def getMapFromName(mapName, renderer):
     :return: Index of the associated attribute
     """
 
-    # Check for the render engine and load config file
-    if renderer.renderer == 'Arnold':
-        if mapName in renderer.baseColor:
-            return 1
-        elif mapName in renderer.height:
-            return 2
-        elif mapName in renderer.metalness:
-            return 3
-        elif mapName in renderer.normal:
-            return 4
-        elif mapName in renderer.roughness:
-            return 5
-        elif mapName in renderer.matte:
-            return 54
-        elif mapName in renderer.opacity:
-            return 49
-        elif mapName in renderer.subsurface:
-            return 28
-        elif mapName in renderer.emission:
-            return 44
-        else:
-            return 0
+    for key, value in renderer.renderParameters.MAPS_INDICES.iteritems():
+        if mapName in value[0]:
+            return value[1]
 
-    elif renderer.renderer == 'Vray':
+    return 0
+
+    '''
+    elif renderer.name == 'Vray':
         if mapName in renderer.baseColor:
             return 1
         elif mapName in renderer.height:
@@ -94,7 +69,7 @@ def getMapFromName(mapName, renderer):
         else:
             return 0
 
-    elif renderer.renderer == 'PxrDisney':
+    elif renderer.name == 'PxrDisney':
         if mapName in renderer.baseColor:
             return 1
         elif mapName in renderer.height:
@@ -127,8 +102,9 @@ def getMapFromName(mapName, renderer):
             return 61
         else:
             return 0
+    '''
 
-def listTextures(ui, foundFiles):
+def listTextures(ui, renderer, foundFiles):
 
     foundTextures = []
     mapsFound = []
@@ -136,7 +112,7 @@ def listTextures(ui, foundFiles):
     texturePath = ui.texturePath.text()
 
     # Extract elements from naming convention
-    textureSetPos, textureSetSeparator, mapPos, mapPosSeparator = extractFromNomenclature(ui)
+    textureSetPos, mapPos, partsLen = extractFromNomenclature(ui)
 
     for texture in foundFiles:
 
@@ -153,55 +129,69 @@ def listTextures(ui, foundFiles):
 
                 # Get map's name from texture's name
                 try:
-                    mapName = texture.split(mapPosSeparator)[mapPos].split('.')[0]
+                    split = splitTextureName(ui.DELIMITERS, texture)
+                    mapName = split[mapPos]
+                    textureSetName = split[textureSetPos]
                 except:
                     mapName = None
+                    textureSetName = None
+                    split = ''
 
-                if mapName:
+                if mapName and textureSetName:
 
-                    # If the map name is not already listed (e.i: baseColor)
-                    if mapName not in mapsFound:
+                    if len(split) == partsLen + 1:
 
-                        # Create map object
-                        map = foundMap()
-                        map.textureName = texture
-                        map.filePath = filePath
-                        map.extension = extension
+                        # If the map name is not already listed (e.i: baseColor)
+                        if mapName not in mapsFound:
 
-                        # Get associated attribute name
-                        map.mapName = getMapFromName(mapName)
+                            # Create map object
+                            map = foundMap()
+                            map.textureName = texture
+                            map.filePath = filePath
+                            map.extension = extension
+                            map.textureSet = textureSetName
 
-                        # Add map to foundTextures
-                        foundTextures.append(map)
+                            # Get associated attribute name
+                            map.indice = getMapFromName(mapName, renderer)
+                            map.mapName = mapName
+                            map.mapInList = renderer.renderParameters.MAP_LIST[map.indice]
+
+                            # Add map to foundTextures
+                            foundTextures.append(map)
 
     return foundTextures
 
 def populateFoundMaps(ui, renderer, foundTextures):
 
     layoutPosition = 0
+    foundMapsName = []
+    uiElements = []
 
     if foundTextures:
         for foundTexture in foundTextures:
 
-            # Create the layout
-            foundMapsSubLayout2 = QtWidgets.QHBoxLayout()
-            ui.foundMapsLayout.insertLayout(layoutPosition, foundMapsSubLayout2, stretch=1)
+            if foundTexture.mapName not in foundMapsName:
 
-            # Create the widgets
-            map1 = QtWidgets.QLineEdit(foundTexture.textureName)
-            foundMapsSubLayout2.addWidget(map1)
+                # Create the layout
+                foundMapsSubLayout2 = QtWidgets.QHBoxLayout()
+                ui.foundMapsLayout.insertLayout(layoutPosition, foundMapsSubLayout2, stretch=1)
 
-            map1Menu = QtWidgets.QComboBox()
-            map1Menu.addItems(renderer.mapsList)
-            map1Menu.setCurrentIndex(foundTexture.mapName)
-            foundMapsSubLayout2.addWidget(map1Menu)
+                # Create the widgets
+                map1 = QtWidgets.QLineEdit(foundTexture.mapName)
+                foundMapsSubLayout2.addWidget(map1)
 
-            # Add ui element to map
-            foundTexture.lineText = map1
-            foundTexture.comboBox = map1Menu
+                map1Menu = QtWidgets.QComboBox()
+                map1Menu.addItems(renderer.renderParameters.MAP_LIST)
+                map1Menu.setCurrentIndex(foundTexture.indice)
+                foundMapsSubLayout2.addWidget(map1Menu)
 
-            # Increment layout position
-            layoutPosition += 1
+                # Add ui element to uiElements
+                uiElements.append([map1, map1Menu])
+
+                foundMapsName.append(foundTexture.mapName)
+
+                # Increment layout position
+                layoutPosition += 1
 
     else:
         # Create the layout
@@ -211,6 +201,9 @@ def populateFoundMaps(ui, renderer, foundTextures):
         # Create the widgets
         map1 = QtWidgets.QLineEdit('No texture found, \ncheck Texture Folder and Naming Convention')
         foundMapsSubLayout2.addWidget(map1)
+
+    return foundTextures, uiElements
+
 
 def displaySecondPartOfUI(ui, renderer):
 
@@ -270,3 +263,206 @@ def clearLayout(layout):
                 widget.deleteLater()
             else:
                 clearLayout(item.layout())
+
+def createFileNode(texture):
+    """
+    Creates a file node and a place2d node, set the texture of the file node and connect both of them
+    :param material: The name of the material
+    :param mapFound: The name of the texture map
+    :param itemPath: The path of the texture map
+    :return: Name of the file node
+    """
+
+    material = texture.textureSet
+    textureName = texture.mapName
+    itemPath = texture.filePath
+
+    # Create a file node
+    fileNode = mc.shadingNode('file', asTexture=True, isColorManaged=True, name=material + '_' + textureName + '_file')
+    # Create a place2d node
+    place2d = mc.shadingNode('place2dTexture', asUtility=True, name=material + '_' + textureName + '_place2d')
+
+    # Set the file path of the file node
+    mc.setAttr(fileNode + '.fileTextureName', itemPath, type='string')
+
+    # Connect the file and the place2d nodes
+    connectPlace2dTexture(place2d, fileNode)
+
+    return fileNode
+
+def connectPlace2dTexture(place2d, fileNode):
+    """
+    Connect the place2d to the file node
+    :param place2d: The name of the place2d node
+    :param fileNode: The name of the file node
+    :return: None
+    """
+
+    # Connections to make
+    connections = ['rotateUV', 'offset', 'noiseUV', 'vertexCameraOne', 'vertexUvThree', 'vertexUvTwo',
+                   'vertexUvOne', 'repeatUV', 'wrapV', 'wrapU', 'stagger', 'mirrorU', 'mirrorV', 'rotateFrame',
+                   'translateFrame', 'coverage']
+
+    # Basic connections
+    mc.connectAttr(place2d + '.outUV', fileNode + '.uvCoord')
+    mc.connectAttr(place2d + '.outUvFilterSize', fileNode + '.uvFilterSize')
+
+    # Other connections
+    for attribute in connections:
+        mc.connectAttr(place2d + '.' + attribute, fileNode + '.' + attribute)
+
+def checkCreateMaterial(ui, texture, renderParamters):
+    """
+        Based on the interface options, create or use existing materials
+        :param material: The material's name
+        :return: The material's name, if the material was found
+        """
+
+    materialNotFound = False
+    materialName = texture.textureSet
+    materialType = renderParamters.SHADER
+
+    # If create new materials if they doesn't exist, instead use existing ones
+    if ui.grpRadioMaterials.checkedId() == -2:
+
+        # If the material doesn't exist or if it's not of the right type
+        if not mc.objExists(materialName) or not mc.objectType(materialName) == materialType:
+
+            # If a '_shd' version of the material doesn't exist
+            if not mc.objExists(materialName + '_shd'):
+
+                # Create the material
+                createMaterialAndShadingGroup(materialName, materialType)
+
+            materialName += '_shd'
+
+    # If create new ones
+    elif ui.grpRadioMaterials.checkedId() == -3:
+
+        # If the '_shd' version of the material doesn't exist
+        if not mc.objExists(materialName + '_shd'):
+
+            # Create the material
+            createMaterialAndShadingGroup(materialName, materialType)
+
+        materialName += '_shd'
+
+    # If use existing ones
+    elif ui.grpRadioMaterials.checkedId() == -4:
+
+        # If the material doesn't exist or if it's not of the right type
+        if not mc.objExists(materialName) or not mc.objectType(materialName) == materialType:
+            # Specify that the material was not found
+            materialNotFound = True
+
+    return materialName, materialNotFound
+
+def createMaterialAndShadingGroup(materialName, materialType):
+    """
+    Create a material and it's shading group
+    :param material: The material's name
+    :return: The material's name
+    """
+
+    # Create the material
+    material = createMaterial(materialName, materialType)
+
+    # Create the shading group
+    shadingEngine = createShadingGroup(materialName)
+
+    # Connect the material to the shading group
+    mc.connectAttr(material + '.outColor', shadingEngine + '.surfaceShader')
+
+    return materialName
+
+def createMaterial(materialName, materialType):
+
+    # Create the material
+    material = mc.shadingNode(materialType, asShader=True, name=materialName + '_shd')
+
+    return material
+
+def createShadingGroup( materialName):
+
+    shadingEngineName = materialName.replace('_shd', '_SG')
+    shadingEngine = mc.shadingNode('shadingEngine', asPostProcess=True, name=shadingEngineName)
+
+    return shadingEngine
+
+def getTexturesToUse(renderer, foundTextures, uiElements):
+
+    texturesToUse = []
+
+    # Create and connect the textures
+    for foundTexture in foundTextures:
+
+        # Connect file node to material
+        for uiElement in uiElements:
+            if foundTexture.mapName == uiElement[0].text():
+                foundTexture.attribute = uiElement[1].currentText()
+                foundTexture.indice = uiElement[1].currentIndex()
+
+        if foundTexture.indice in renderer.renderParameters.DONT_USE_IDS:
+            foundTextures.remove(foundTexture)
+        else:
+            if foundTexture.indice in renderer.renderParameters.MAP_LIST_COLOR_ATTRIBUTES_INDICES:
+                foundTexture.output = 'outColor'
+            else:
+                foundTexture.output = 'outColorR'
+
+            texturesToUse.append(foundTexture)
+
+    return texturesToUse
+
+def connectTexture(textureNode, textureOutput, targetNode, targetInput, colorCorrect=False, forceTexture=True):
+    """
+    Connect the file node to the material
+    :param textureNode: Name of the file node
+    :param textureOutput: Output attribute of the file node we need to use
+    :param targetNode: Name of the material node
+    :param targetInput: Input attribute of the material node we need to use
+    :return: None
+    """
+
+    # If use colorCorrect
+    if colorCorrect == True:
+
+        # Create a colorCorrect node
+        colorCorrect = mc.shadingNode('colorCorrect', asUtility=True, isColorManaged=True, )
+
+        textureInput = textureOutput.replace('out', 'in')
+
+        # Connect the file node to the color correct
+        mc.connectAttr(textureNode + '.' + textureOutput, colorCorrect + '.' + textureInput, force=forceTexture)
+
+        # Connect the color correct to the material
+        mc.connectAttr(colorCorrect + '.' + textureOutput, targetNode + '.' + targetInput, force=forceTexture)
+
+    # Connect the file node output to to right material input
+    else:
+        mc.connectAttr(textureNode + '.' + textureOutput, targetNode + '.' + targetInput, force=forceTexture)
+
+
+def createDisplacementMap(texture, fileNode, colorCorrect=False, forceTexture=True):
+    """
+    Connect displacement to the right shading engine(s)
+    :param material: The name of the material
+    :param forceTexture: Specify if the texture connection is forced
+    :param imageNode: The file node to connect
+    :return: None
+    """
+
+    # Create a displacement node
+    displaceNode = mc.shadingNode('displacementShader', asShader=True)
+
+    # Connect the texture to the displacement node
+    connectTexture(fileNode, 'outColorR', displaceNode, 'displacement', colorCorrect)
+
+    # Get the shading engine associated with given material
+    shadingGroups = mc.listConnections(texture.textureSet + '.outColor')
+
+    for shadingGroup in shadingGroups:
+
+        # Connect the displacement node to all the found shading engines
+        mc.connectAttr(displaceNode + '.displacement',
+                       shadingGroup + '.displacementShader', force=forceTexture)

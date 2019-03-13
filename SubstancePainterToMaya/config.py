@@ -38,6 +38,5 @@ EMISSION = [
     'emission', 'Emission', 'emissive', 'Emissive', 'light', 'Light'
 ]
 
-DELIMITERS = [
-    '-', '_', ',', '*', '@', '\\', '/', '+'
-]
+DELIMITERS = '-|_|@|\+| |\.'
+

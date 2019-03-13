@@ -94,23 +94,7 @@ class rendererObject:
             self.name = 'PxrSurface'
             print 'Renderman - PxrSurface'
 
-        self.mapsList = config.MAP_LIST
-        self.mapsListRealAttributes = config.MAP_LIST_REAL_ATTRIBUTES
-        self.mapsListColorAttributesIndices = config.MAP_LIST_COLOR_ATTRIBUTES_INDICES
-        self.mapsDontUseIds = config.DONT_USE_IDS
-        self.shaderToUse = config.SHADER_TO_USE
-        self.normalNode = config.NORMAL_NODE
-        self.bumpNode = config.BUMP_NODE
-
-        self.baseColor = config.BASE_COLOR
-        self.height = config.HEIGHT
-        self.metalness = config.METALNESS
-        self.normal = config.NORMAL
-        self.roughness = config.ROUGHNESS
-        self.matte = config.MATTE
-        self.opacity = config.OPACITY
-        self.subsurface = config.SUBSURFACE
-        self.emission = config.EMISSION
+        self.renderParameters = config.config()
 
 
 def SPtoM():
@@ -142,41 +126,64 @@ def launch(ui):
     helper.clearLayout(ui.foundMapsLayout)
 
     # Populate the UI with the maps
-    helper.populateFoundMaps(ui, renderer, foundTextures)
+    foundTextures, uiElements = helper.populateFoundMaps(ui, renderer, foundTextures)
 
     # Display second part of the UI
     helper.displaySecondPartOfUI(ui, renderer)
 
     # Add connect to the proceed button
-    ui.proceedButton.clicked.connect(lambda: proceed(ui, foundTextures, renderer))
+    ui.proceedButton.clicked.connect(lambda: proceed(ui, foundTextures, renderer, uiElements))
 
-def proceed(ui, foundTextures, renderer):
+def proceed(ui, foundTextures, renderer, uiElements):
 
     print('\n PROCEED \n')
 
-    # Create and connect the textures
-    for foundTexture in foundTextures:
+    # Import render definitions
+    if renderer.name == 'Arnold':
+        import helper_arnold as render_helper
+        reload(render_helper)
+        subdivisions = ui.checkbox5.isChecked()
 
-        # Find shader
-        shader = helper.getShader(ui, foundTexture, renderer)
+    elif renderer.name == 'Vray':
+        import helper_arnold as render_helper
+        reload(render_helper)
+        subdivisions = ui.checkbox6.isChecked()
 
-        print('Shader used is ' + shader)
+    elif renderer.name == 'PxrDisey':
+        import helper_arnold as render_helper
+        reload(render_helper)
+
+    elif renderer.name == 'PxrSurface':
+        import helper_arnold as render_helper
+        reload(render_helper)
+
+    # Get the textures to use
+    texturesToUse = helper.getTexturesToUse(renderer, foundTextures, uiElements)
+
+    # Connect textures
+    for texture in texturesToUse:
 
         # Create file node and 2dPlacer
-        fileNode = helper.createFileNode(foundTexture)
+        fileNode = helper.createFileNode(texture)
 
-        print('File node created')
+        # Create material
+        material, materialNotFound = helper.checkCreateMaterial(ui, texture, renderer.renderParameters)
 
-        # Connect connect file node
-        connected = helper.connectFileNode(ui, foundTexture, renderer)
+        if materialNotFound:
+            continue
 
-        if connected == True:
-            print(foundTexture.textureName + ' connected')
+        texture.textureSet = material
+        texture.materialAttribute = renderer.renderParameters.MAP_LIST_REAL_ATTRIBUTES[texture.indice]
 
-        else:
-            print(foundTexture.textureName + ' not connected')
+        render_helper.connect(ui, texture, renderer, fileNode)
 
-    # Add subdivisions
+        # Add subdivisions
+        if subdivisions == True:
+            render_helper.addSubdivisions(ui, texture)
+
+    print('\n FINISHED \n')
+
+
 
 
 

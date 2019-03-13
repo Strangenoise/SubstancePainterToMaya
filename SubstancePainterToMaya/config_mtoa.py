@@ -36,44 +36,42 @@ class config:
         ]
 
         self.MAPS_INDICES = {
-            'base_color' :
-                [
-                    'baseColor', 'BaseColor', 'basecolor', 'color', 'Color',
-                    'albedo', 'Albedo', 'diffuse', 'Diffuse', 'diff', 'Diff'
-                ],
-            'height' :
-                [
-                'displace', 'Displace', 'Displacement', 'displacement', 'height', 'Height',
-                'bump', 'Bump', 'BumpMap', 'bumpMap', 'displacementMap', 'DisplacementMap'
-                ],
-            'metalness' :
-                [
-                'metal', 'Metal', 'metalness', 'Metalness'
-                ],
-            'normal':
-                [
-                'normal', 'Normal', 'normalMap', 'NormalMap'
-                ],
-            'roughness' :
-                [
-                'roughness', 'Roughness', 'specularRoughness', 'SpecularRoughness', 'specular', 'Specular', 'spec', 'Spec'
-                ],
-            'matte' :
-                [
-                'Matte', 'matte'
-                ],
-            'opacity' :
-                [
-                'Opacity', 'opacity', 'transparency', 'Transparency'
-                ],
-            'subsurface' :
-                [
-                'subsurfaceColor', 'SubsurfaceColor', 'SSS', 'SSSColor', 'SSScolor', 'sss', 'sssColor', 'ssscolor'
-                ],
-            'emission' :
-                [
-                'emission', 'Emission', 'emissive', 'Emissive', 'light', 'Light'
-                ]
+            'baseColor': [
+                ['baseColor', 'BaseColor', 'basecolor', 'color', 'Color','albedo', 'Albedo', 'diffuse', 'Diffuse', 'diff', 'Diff'],
+                1
+            ],
+            'height': [
+                ['displace', 'Displace', 'Displacement', 'displacement', 'height', 'Height','bump', 'Bump', 'BumpMap', 'bumpMap', 'displacementMap', 'DisplacementMap'],
+                2
+            ],
+            'metalness': [
+                ['metal', 'Metal', 'metalness', 'Metalness'],
+                3
+            ],
+            'normal': [
+                ['normal', 'Normal', 'normalMap', 'NormalMap'],
+                4
+            ],
+            'roughness': [
+                ['roughness', 'Roughness', 'specularRoughness', 'SpecularRoughness', 'specular', 'Specular', 'spec', 'Spec'],
+                5
+            ],
+            'matte': [
+                ['Matte', 'matte'],
+                54
+            ],
+            'opacity': [
+                ['Opacity', 'opacity', 'transparency', 'Transparency'],
+                49
+            ],
+            'subsurface': [
+                ['subsurfaceColor', 'SubsurfaceColor', 'SSS', 'SSSColor', 'SSScolor', 'sss', 'sssColor', 'ssscolor'],
+                28
+            ],
+            'emission': [
+                ['emission', 'Emission', 'emissive', 'Emissive', 'light', 'Light'],
+                44
+            ]
         }
 
         self.MAP_LIST_COLOR_ATTRIBUTES_INDICES = [1, 4, 7, 13, 20, 21, 28, 29, 34, 37, 40, 44, 49, 51, 52, 54]
