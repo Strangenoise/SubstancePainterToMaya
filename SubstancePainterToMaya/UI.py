@@ -50,7 +50,7 @@ class PainterToMayaUI:
         self.layVMainWindow01 = QtWidgets.QVBoxLayout()
         self.layHMainWindowMain.insertLayout(0, self.layVMainWindow01, stretch=1)
         self.layVMainWindow02 = QtWidgets.QVBoxLayout()
-        self.layHMainWindowMain.insertLayout(1, self.layVMainWindow02, stretch=1)
+        self.layHMainWindowMain.insertLayout(1, self.layVMainWindow02, stretch=3)
 
         # Texture Folder
         self.grpBrowseForDirectory = QtWidgets.QGroupBox('Textures Folder')
@@ -75,31 +75,34 @@ class PainterToMayaUI:
         self.namingConventionLayout = QtWidgets.QVBoxLayout()
         self.grpNamingConvention.setLayout(self.namingConventionLayout)
 
-        self.namingConventionSubLayout1 = QtWidgets.QVBoxLayout()
-        self.namingConventionLayout.insertLayout(1, self.namingConventionSubLayout1, stretch=1)
+        self.nomenclatureInfo = QtWidgets.QLabel(
+            'Enter the textureSet and the map name of one of your textures'
+            '\n\nSee the documentation for more informations\n'
+        )
+        self.namingConventionLayout.addWidget(self.nomenclatureInfo)
 
-        self.namingConventionSubLayout2 = QtWidgets.QHBoxLayout()
-        self.namingConventionLayout.insertLayout(2, self.namingConventionSubLayout2, stretch=1)
+        self.namingConventionSubLayout1 = QtWidgets.QHBoxLayout()
+        self.namingConventionLayout.insertLayout(-1, self.namingConventionSubLayout1, stretch=0)
 
-        self.namingConventionSubLayout3 = QtWidgets.QVBoxLayout()
-        self.namingConventionLayout.insertLayout(3, self.namingConventionSubLayout3, stretch=1)
+        self.namingConventionSubLayoutLabel = QtWidgets.QVBoxLayout()
+        self.namingConventionSubLayout1.insertLayout(1, self.namingConventionSubLayoutLabel, stretch=0)
+
+        self.namingConventionSubLayoutValue = QtWidgets.QVBoxLayout()
+        self.namingConventionSubLayout1.insertLayout(2, self.namingConventionSubLayoutValue, stretch=0)
 
         # Add Naming Convention widgets
-        self.nomenclatureInfo = QtWidgets.QLabel(
-            'Match the naming convention of the export from Substance Painter\nUse $map where you put your map\'s name\n$textureSet is needed too.'
-        )
-        self.namingConventionSubLayout1.addWidget(self.nomenclatureInfo)
-        self.nomenclatureInfo.setStyleSheet('padding: 0 0 0 0;')
+        self.textureSetLabel = QtWidgets.QLabel('textureSet')
+        self.namingConventionSubLayoutLabel.addWidget(self.textureSetLabel)
 
-        self.namingConvention = QtWidgets.QLineEdit('$mesh_$textureSet_$map')
-        self.namingConventionSubLayout2.addWidget(self.namingConvention)
+        self.textureSet = QtWidgets.QLineEdit('aiStandardSurface4')
+        self.namingConventionSubLayoutValue.addWidget(self.textureSet)
 
-        self.setNamingConventionButton = QtWidgets.QPushButton('Set')
-        self.setNamingConventionButton.clicked.connect(lambda: self.setNamingConvention())
-        self.namingConventionSubLayout2.addWidget(self.setNamingConventionButton)
+        self.mapLabel = QtWidgets.QLabel('map')
+        self.namingConventionSubLayoutLabel.addWidget(self.mapLabel)
+        self.mapLabel.resize(200,200)
 
-        self.namingConventionInfo = QtWidgets.QLabel('I.e: boy_shader_baseColor.png')
-        self.namingConventionLayout.addWidget(self.namingConventionInfo)
+        self.map = QtWidgets.QLineEdit('BaseColor')
+        self.namingConventionSubLayoutValue.addWidget(self.map)
 
         # Renderer
         self.grpRenderer = QtWidgets.QGroupBox('Renderer')
@@ -168,6 +171,12 @@ class PainterToMayaUI:
         self.foundMapsLayout = QtWidgets.QVBoxLayout()
         self.grpFoundMaps.setLayout(self.foundMapsLayout)
 
+        self.scroll = QtWidgets.QScrollArea()
+        self.scroll.setWidget(self.grpFoundMaps)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setFixedHeight(300)
+        self.layVMainWindow02.addWidget(self.scroll)
+
         # Options
         self.grpOptions = QtWidgets.QGroupBox('Options')
         self.layVMainWindow02.addWidget(self.grpOptions)
@@ -180,9 +189,6 @@ class PainterToMayaUI:
 
         self.optionsSubLayout2 = QtWidgets.QHBoxLayout()
         self.optionsLayout.insertLayout(2, self.optionsSubLayout2, stretch=1)
-
-        self.optionsSubLayout3 = QtWidgets.QHBoxLayout()
-        self.optionsLayout.insertLayout(3, self.optionsSubLayout3, stretch=1)
 
         # Options Widgets
         self.checkbox1 = QtWidgets.QCheckBox('Use height as bump')
@@ -199,44 +205,6 @@ class PainterToMayaUI:
 
         self.checkbox4 = QtWidgets.QCheckBox('Add colorCorrect node after each file node')
         self.optionsSubLayout1.addWidget(self.checkbox4)
-
-        self.checkbox5 = QtWidgets.QCheckBox('Add subdivisions')
-        self.optionsSubLayout2.addWidget(self.checkbox5)
-        self.checkbox5.stateChanged.connect(lambda: self.addArnoldSubdivisionsCheckbox())
-
-
-        self.subdivTypeTitle = QtWidgets.QLabel('Type')
-        self.optionsSubLayout2.addWidget(self.subdivTypeTitle)
-
-        self.subdivType = QtWidgets.QComboBox()
-        self.subdivType.addItems(['catclark', 'linear'])
-        self.subdivType.setEnabled(False)
-        self.optionsSubLayout2.addWidget(self.subdivType)
-
-        self.subdivIterTitle = QtWidgets.QLabel('Iterations')
-        self.optionsSubLayout2.addWidget(self.subdivIterTitle)
-
-        self.subdivIter = QtWidgets.QLineEdit('1')
-        self.subdivIter.setEnabled(False)
-        self.optionsSubLayout2.addWidget(self.subdivIter)
-
-        self.checkbox6 = QtWidgets.QCheckBox('Add subdivisions')
-        self.optionsSubLayout3.addWidget(self.checkbox6)
-        self.checkbox6.stateChanged.connect(lambda: self.addVraySubdivisionsCheckbox())
-
-        self.subdivIterVrayTitle = QtWidgets.QLabel('Edge Length')
-        self.optionsSubLayout3.addWidget(self.subdivIterVrayTitle)
-
-        self.subdivIterVray = QtWidgets.QLineEdit('4')
-        self.subdivIterVray.setEnabled(False)
-        self.optionsSubLayout3.addWidget(self.subdivIterVray)
-
-        self.subdivMaxVrayTitle = QtWidgets.QLabel('Max Subdivs')
-        self.optionsSubLayout3.addWidget(self.subdivMaxVrayTitle)
-
-        self.maxSubdivIterVray = QtWidgets.QLineEdit('4')
-        self.maxSubdivIterVray.setEnabled(False)
-        self.optionsSubLayout3.addWidget(self.maxSubdivIterVray)
 
         # Proceed
         self.grpProceed = QtWidgets.QGroupBox('Proceed')
@@ -265,16 +233,7 @@ class PainterToMayaUI:
         self.grpFoundMaps.setVisible(False)
         self.grpOptions.setVisible(False)
         self.grpProceed.setVisible(False)
-
-        # List specific renderer elements
-        self.arnoldUIElements = [
-            self.checkbox5, self.subdivIterTitle, self.subdivIter, self.subdivTypeTitle, self.subdivType
-        ]
-        self.vrayUIElements = [
-            self.checkbox6, self.subdivIterVrayTitle, self.subdivIterVray,
-            self.subdivMaxVrayTitle, self.maxSubdivIterVray
-        ]
-        self.rendermanUIElements = []
+        self.scroll.setVisible(False)
 
         global window
 
@@ -287,41 +246,6 @@ class PainterToMayaUI:
         window = self.mainWindow
         self.mainWindow.show()
         print('UI opened')
-
-
-    def setNamingConvention(self):
-        """
-        Change the naming convention example
-        :return: The naming convention example
-        """
-
-        text = 'I.e: '
-
-        # Change the naming convention example
-        if '$textureSet' in self.namingConvention.text() and '$map' in self.namingConvention.text():
-            text += self.namingConvention.text()
-
-            text = text.replace('$textureSet', 'shader')
-            text = text.replace('$map', 'baseColor')
-            text = text.replace('$mesh', 'boy')
-
-            self.namingConventionInfo.setStyleSheet(
-                'color:%s;' % 'white' +
-                'font-weight:regular;'
-            )
-
-            text += '.png'
-
-        else:
-            text = 'Warning: $textureSet and $map are needed !'
-            self.namingConventionInfo.setStyleSheet(
-                'color:%s;' % 'yellow' +
-                'font-weight:bold;'
-            )
-
-        self.namingConventionInfo.setText(text)
-
-        return text
 
     def getTextureFolder(self):
         """
@@ -384,3 +308,19 @@ class PainterToMayaUI:
         else:
             self.subdivIterVray.setEnabled(False)
             self.maxSubdivIterVray.setEnabled(False)
+
+    def addRendermanSubdivisionsCheckbox(self):
+        """
+        Enable or disable subdivisions in the interface
+        :return: None
+        """
+
+        # If subdivisions is checked
+        if self.checkbox7.isChecked():
+            self.subdivIterRenderman.setEnabled(True)
+            self.subdivInterRenderman.setEnabled(True)
+
+        # If subdivisions is not checked
+        else:
+            self.subdivIterRenderman.setEnabled(False)
+            self.subdivInterRenderman.setEnabled(False)

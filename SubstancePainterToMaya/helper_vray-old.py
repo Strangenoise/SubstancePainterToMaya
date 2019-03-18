@@ -28,26 +28,6 @@ def addVraySubdivisions(self, material):
 
 def connect(material, mapFound, itemPath, attributeName, attributeIndex, forceTexture, ui, launcher):
 
-    # Add subdivisions
-    if ui.checkbox6.isChecked():
-        addVraySubdivisions(material)
-
-    # Create file node
-    imageNode = helper.createFileNode(material, mapFound, itemPath)
-
-    # Change file node parameters to Raw and add alphaIsLuminance
-    if attributeName is not 'color':
-        try:
-            mc.setAttr(imageNode + '.colorSpace', 'Raw', type='string')
-        except:
-            pass
-        mc.setAttr(imageNode + '.alphaIsLuminance', True)
-
-    # Specify the output attribute to use for the file nodes
-    if attributeIndex in launcher.mapsListColorAttributesIndices:
-        outputAttr = 'outColor'
-    else:
-        outputAttr = 'outColorR'
 
     # If height
     if attributeName == 'bumpMap':
@@ -55,36 +35,7 @@ def connect(material, mapFound, itemPath, attributeName, attributeIndex, forceTe
         # If bump
         if ui.checkbox1.isChecked():
 
-            bumpConnections = mc.listConnections(material + '.bumpMap')
 
-            if mc.getAttr(material + '.bumpMapType') == 1 and bumpConnections:
-
-                # Create bump material
-                print material
-                if '_shd' in material:
-                    bumpMaterial = material.replace('_shd', '_bump')
-                else:
-                    bumpMaterial = material + '_bump'
-
-                bumpMaterial = launcher.createMaterial(bumpMaterial, launcher.bumpNode)
-                mc.setAttr(bumpMaterial + '.bumpMapType', 0)
-
-                # Connect file to bump material
-                helper.connectTexture(imageNode, '.' + outputAttr, bumpMaterial, '.' + 'bumpMap', ui.checkbox4.isChecked())
-
-                # Connect bump material to original material shading group
-                shadingGroups = mc.listConnections(material + '.outColor', destination=True)
-
-                for shadingGroup in shadingGroups:
-                    # Connect the displacement node to all the found shading engines
-                    mc.connectAttr(bumpMaterial + '.outColor', shadingGroup + '.surfaceShader', force=forceTexture)
-
-                # Connect material to bump material
-                mc.connectAttr(material + '.outColor', bumpMaterial + '.base_material')
-
-            else:
-                helper.connectTexture(imageNode, '.' + outputAttr, material, '.' + 'bumpMap', ui.checkbox4.isChecked())
-                mc.setAttr(material + '.bumpMapType', 0)
 
         # If displace
         if ui.checkbox2.isChecked():
@@ -93,38 +44,7 @@ def connect(material, mapFound, itemPath, attributeName, attributeIndex, forceTe
     # If normal Map
     elif attributeName == 'normalMap':
 
-        bumpConnections = mc.listConnections(material + '.bumpMap')
 
-        print bumpConnections
-
-        if mc.getAttr(material + '.bumpMapType') == 0 and bumpConnections:
-
-            # Create bump material
-            print material
-            if '_shd' in material:
-                bumpMaterial = material.replace('_shd', '_bump')
-            else:
-                bumpMaterial = material + '_bump'
-
-            bumpMaterial = launcher.createMaterial(bumpMaterial, launcher.bumpNode)
-            mc.setAttr(bumpMaterial + '.bumpMapType', 1)
-
-            # Connect file to bump material
-            helper.connectTexture(imageNode, '.' + outputAttr, bumpMaterial, '.' + 'bumpMap', ui.checkbox4.isChecked())
-
-            # Connect bump material to original material shading group
-            shadingGroups = mc.listConnections(material + '.outColor', destination=True)
-
-            for shadingGroup in shadingGroups:
-                # Connect the displacement node to all the found shading engines
-                mc.connectAttr(bumpMaterial + '.outColor', shadingGroup + '.surfaceShader', force=forceTexture)
-
-            # Connect material to bump material
-            mc.connectAttr(material + '.outColor', bumpMaterial + '.base_material')
-
-        else:
-            helper.connectTexture(imageNode, '.' + outputAttr, material, '.' + 'bumpMap')
-            mc.setAttr(material + '.bumpMapType', 1)
 
     # If it's another type of map
     else:

@@ -1,6 +1,7 @@
 import maya.cmds as mc
 import os
 from PySide2 import QtWidgets
+from PySide2 import QtGui
 import re
 
 class foundMap:
@@ -17,25 +18,53 @@ def splitTextureName(delimiters, textureName):
 
     return re.split(delimiters, textureName)
 
-def extractFromNomenclature(ui):
-    """
-    Check for the naming convention specified in the interface and extract elements
-    :return: position of the texture set, separator of the texture set, position of the map, separator of the map
-    """
+def before(value, a):
+    # Find first part and return slice before it.
+    pos_a = value.find(a)
+    if pos_a == -1: return ""
+    return value[0:pos_a]
 
-    textureSetPos = mapPos = i = 0
+def splitNamingConvention(ui, textures):
 
-    parts = splitTextureName(ui.DELIMITERS, ui.namingConvention.text())
+    construction = []
+    textureSetSeparator = '_'
+    mapSeparator = '_'
+    textureSet = ui.textureSet.text().encode("ascii")
+    map = ui.map.text().encode("ascii")
 
-    for part in parts:
-        if part == '$textureSet':
-            textureSetPos = i
-        elif part == '$map':
-            mapPos = i
+    for texture in textures:
 
-        i += 1
+        if textureSet in texture and map in texture:
 
-    return textureSetPos, mapPos, len(parts)
+            beforeTextureSet = re.split(ui.DELIMITERS, before(texture, textureSet))
+            beforeMapSet = re.split(ui.DELIMITERS, before(texture, map))
+            extension = texture.split('.')[-1]
+
+            if extension in ui.PAINTER_IMAGE_EXTENSIONS:
+                textureSplit = re.split(ui.DELIMITERS, texture)
+
+                textureSetSplit = re.split(ui.DELIMITERS, textureSet)
+                textureSetSeparator = re.sub('[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789]', '', textureSet)
+
+                mapSplit = re.split(ui.DELIMITERS, map)
+                mapSeparator = re.sub('[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789]', '', map)
+
+
+
+                for i in range(0, len(textureSplit)):
+                    if len(beforeTextureSet) <= i+1 <= (len(beforeTextureSet) + len(textureSetSplit))-1:
+                        construction.append('textureSet')
+                        continue
+
+                    if len(beforeMapSet) <= i+1 <= (len(beforeMapSet) + len(mapSplit))-1:
+                        construction.append('map')
+                        continue
+
+                    construction.append('part')
+
+                break
+
+    return construction, textureSetSeparator, mapSeparator
 
 def getMapFromName(mapName, renderer):
     """
@@ -50,69 +79,17 @@ def getMapFromName(mapName, renderer):
 
     return 0
 
-    '''
-    elif renderer.name == 'Vray':
-        if mapName in renderer.baseColor:
-            return 1
-        elif mapName in renderer.height:
-            return 2
-        elif mapName in renderer.metalness:
-            return 3
-        elif mapName in renderer.normal:
-            return 5
-        elif mapName in renderer.roughness:
-            return 4
-        elif mapName in renderer.opacity:
-            return 10
-        elif mapName in renderer.subsurface:
-            return 35
-        else:
-            return 0
-
-    elif renderer.name == 'PxrDisney':
-        if mapName in renderer.baseColor:
-            return 1
-        elif mapName in renderer.height:
-            return 15
-        elif mapName in renderer.metalness:
-            return 5
-        elif mapName in renderer.normal:
-            return 15
-        elif mapName in renderer.roughness:
-            return 8
-        elif mapName in renderer.subsurface:
-            return 4
-        else:
-            return 0
-
-    elif renderer.renderer == 'PxrSurface':
-        if mapName in renderer.baseColor:
-            return 1
-        elif mapName in renderer.height:
-            return 2
-        elif mapName in renderer.metalness:
-            return 4
-        elif mapName in renderer.normal:
-            return 3
-        elif mapName in renderer.roughness:
-            return 5
-        elif mapName in renderer.opacity:
-            return 87
-        elif mapName in renderer.subsurface:
-            return 61
-        else:
-            return 0
-    '''
 
 def listTextures(ui, renderer, foundFiles):
 
     foundTextures = []
     mapsFound = []
 
+    # Get the texture path
     texturePath = ui.texturePath.text()
 
-    # Extract elements from naming convention
-    textureSetPos, mapPos, partsLen = extractFromNomenclature(ui)
+    # Get naming convention elements
+    construction, textureSetSeparator, mapSeparator = splitNamingConvention(ui, foundFiles)
 
     for texture in foundFiles:
 
@@ -122,24 +99,39 @@ def listTextures(ui, renderer, foundFiles):
         # If item is a file
         if os.path.isfile(filePath):
             # Get item's extension
-            extension = texture.split('.')[1]
+            extension = texture.split('.')[-1]
 
             # If its a valid texture file
             if extension in ui.PAINTER_IMAGE_EXTENSIONS:
 
-                # Get map's name from texture's name
-                try:
-                    split = splitTextureName(ui.DELIMITERS, texture)
-                    mapName = split[mapPos]
-                    textureSetName = split[textureSetPos]
-                except:
-                    mapName = None
-                    textureSetName = None
-                    split = ''
+                textureSet = ''
+                name = ''
+
+                textureSetStart = 0
+                nameStart = 0
+
+                textureSplit = re.split(ui.DELIMITERS, texture)
+
+                if len(construction) == len(textureSplit):
+
+                    for i in range(0, len(construction)):
+
+                        if construction[i] == 'textureSet':
+                            if textureSetStart > 0:
+                                textureSet += textureSetSeparator[textureSetStart - 1]
+                            textureSet += textureSplit[i]
+                            textureSetStart += 1
+
+                        if construction[i] == 'map':
+                            if nameStart > 0:
+                                name += mapSeparator[nameStart - 1]
+                            name += textureSplit[i]
+                            nameStart += 1
+
+                mapName = name
+                textureSetName = textureSet
 
                 if mapName and textureSetName:
-
-                    if len(split) == partsLen + 1:
 
                         # If the map name is not already listed (e.i: baseColor)
                         if mapName not in mapsFound:
@@ -168,13 +160,14 @@ def populateFoundMaps(ui, renderer, foundTextures):
     uiElements = []
 
     if foundTextures:
+
         for foundTexture in foundTextures:
 
             if foundTexture.mapName not in foundMapsName:
 
                 # Create the layout
                 foundMapsSubLayout2 = QtWidgets.QHBoxLayout()
-                ui.foundMapsLayout.insertLayout(layoutPosition, foundMapsSubLayout2, stretch=1)
+                ui.foundMapsLayout.insertLayout(-1, foundMapsSubLayout2, stretch=1)
 
                 # Create the widgets
                 map1 = QtWidgets.QLineEdit(foundTexture.mapName)
@@ -210,43 +203,75 @@ def displaySecondPartOfUI(ui, renderer):
     # Display second part of the interface
     ui.grpFoundMaps.setVisible(True)
     ui.grpOptions.setVisible(True)
-
-    arnoldUIElements = ui.arnoldUIElements
-    vrayUIElements = ui.vrayUIElements
-    rendermanUIElements = ui.rendermanUIElements
+    ui.scroll.setVisible(True)
 
     if renderer.name == 'Arnold':
-        for item in vrayUIElements:
-            item.setVisible(False)
+        # Arnold subdivisions
+        ui.checkbox5 = QtWidgets.QCheckBox('Add subdivisions')
+        ui.optionsSubLayout2.addWidget(ui.checkbox5)
+        ui.checkbox5.stateChanged.connect(lambda: ui.addArnoldSubdivisionsCheckbox())
 
-        for item in rendermanUIElements:
-            item.setVisible(False)
+        ui.subdivTypeTitle = QtWidgets.QLabel('Type')
+        ui.optionsSubLayout2.addWidget(ui.subdivTypeTitle)
 
-        for item in arnoldUIElements:
-            item.setVisible(True)
+        ui.subdivType = QtWidgets.QComboBox()
+        ui.subdivType.addItems(['catclark', 'linear'])
+        ui.subdivType.setEnabled(False)
+        ui.optionsSubLayout2.addWidget(ui.subdivType)
+
+        ui.subdivIterTitle = QtWidgets.QLabel('Iterations')
+        ui.optionsSubLayout2.addWidget(ui.subdivIterTitle)
+
+        ui.subdivIter = QtWidgets.QLineEdit('1')
+        ui.subdivIter.setEnabled(False)
+        ui.optionsSubLayout2.addWidget(ui.subdivIter)
 
     elif renderer.name == 'Vray':
-        for item in arnoldUIElements:
-            item.setVisible(False)
+        # Vray subdivisions
+        ui.checkbox6 = QtWidgets.QCheckBox('Add subdivisions')
+        ui.optionsSubLayout2.addWidget(ui.checkbox6)
+        ui.checkbox6.stateChanged.connect(lambda: ui.addVraySubdivisionsCheckbox())
 
-        for item in rendermanUIElements:
-            item.setVisible(False)
+        ui.subdivIterVrayTitle = QtWidgets.QLabel('Edge Length')
+        ui.optionsSubLayout2.addWidget(ui.subdivIterVrayTitle)
 
-        for item in vrayUIElements:
-            item.setVisible(True)
+        ui.subdivIterVray = QtWidgets.QLineEdit('4')
+        ui.subdivIterVray.setEnabled(False)
+        ui.optionsSubLayout2.addWidget(ui.subdivIterVray)
+
+        ui.subdivMaxVrayTitle = QtWidgets.QLabel('Max Subdivs')
+        ui.optionsSubLayout2.addWidget(ui.subdivMaxVrayTitle)
+
+        ui.maxSubdivIterVray = QtWidgets.QLineEdit('4')
+        ui.maxSubdivIterVray.setEnabled(False)
+        ui.optionsSubLayout2.addWidget(ui.maxSubdivIterVray)
 
     elif renderer.name == 'PxrSurface' or renderer.name == 'PxrDisney':
-        for item in arnoldUIElements:
-            item.setVisible(False)
+        # Renderman Subdivisions
+        ui.checkbox7 = QtWidgets.QCheckBox('Add subdivisions')
+        ui.optionsSubLayout2.addWidget(ui.checkbox7)
+        ui.checkbox7.stateChanged.connect(lambda: ui.addRendermanSubdivisionsCheckbox())
 
-        for item in vrayUIElements:
-            item.setVisible(False)
+        ui.subdivIterRendermanTitle = QtWidgets.QLabel('scheme')
+        ui.optionsSubLayout2.addWidget(ui.subdivIterRendermanTitle)
 
-        for item in rendermanUIElements:
-            item.setVisible(True)
+        ui.subdivIterRenderman = QtWidgets.QComboBox()
+        ui.subdivIterRenderman.addItems(['Catmull', 'Loop', 'Bilinear'])
+        ui.subdivIterRenderman.setEnabled(False)
+        ui.optionsSubLayout2.addWidget(ui.subdivIterRenderman)
+
+        ui.subdivInterRendermanTitle = QtWidgets.QLabel('Interpolation')
+        ui.optionsSubLayout2.addWidget(ui.subdivInterRendermanTitle)
+
+        ui.subdivInterRenderman = QtWidgets.QComboBox()
+        ui.subdivInterRenderman.addItems(['No', 'Sharp creases and corners', 'Sharp creases'])
+        ui.subdivInterRenderman.setEnabled(False)
+        ui.optionsSubLayout2.addWidget(ui.subdivInterRenderman)
 
     ui.grpProceed.setVisible(True)
     ui.launchButton.setText('Re-launch')
+
+    return ui
 
 def clearLayout(layout):
     """
@@ -398,12 +423,14 @@ def getTexturesToUse(renderer, foundTextures, uiElements):
 
         # Connect file node to material
         for uiElement in uiElements:
+
             if foundTexture.mapName == uiElement[0].text():
                 foundTexture.attribute = uiElement[1].currentText()
                 foundTexture.indice = uiElement[1].currentIndex()
 
         if foundTexture.indice in renderer.renderParameters.DONT_USE_IDS:
-            foundTextures.remove(foundTexture)
+            continue
+
         else:
             if foundTexture.indice in renderer.renderParameters.MAP_LIST_COLOR_ATTRIBUTES_INDICES:
                 foundTexture.output = 'outColor'
@@ -452,6 +479,8 @@ def createDisplacementMap(texture, fileNode, colorCorrect=False, forceTexture=Tr
     :return: None
     """
 
+    shadingGroups = None
+
     # Create a displacement node
     displaceNode = mc.shadingNode('displacementShader', asShader=True)
 
@@ -463,6 +492,7 @@ def createDisplacementMap(texture, fileNode, colorCorrect=False, forceTexture=Tr
 
     for shadingGroup in shadingGroups:
 
-        # Connect the displacement node to all the found shading engines
-        mc.connectAttr(displaceNode + '.displacement',
-                       shadingGroup + '.displacementShader', force=forceTexture)
+        if mc.objectType(shadingGroup) == 'shadingEngine':
+            # Connect the displacement node to all the found shading engines
+            mc.connectAttr(displaceNode + '.displacement',
+                           shadingGroup + '.displacementShader', force=forceTexture)

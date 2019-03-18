@@ -124,12 +124,13 @@ def launch(ui):
 
     # Remove elements from FoundMaps
     helper.clearLayout(ui.foundMapsLayout)
+    helper.clearLayout(ui.optionsSubLayout2)
 
     # Populate the UI with the maps
     foundTextures, uiElements = helper.populateFoundMaps(ui, renderer, foundTextures)
 
     # Display second part of the UI
-    helper.displaySecondPartOfUI(ui, renderer)
+    ui = helper.displaySecondPartOfUI(ui, renderer)
 
     # Add connect to the proceed button
     ui.proceedButton.clicked.connect(lambda: proceed(ui, foundTextures, renderer, uiElements))
@@ -145,17 +146,19 @@ def proceed(ui, foundTextures, renderer, uiElements):
         subdivisions = ui.checkbox5.isChecked()
 
     elif renderer.name == 'Vray':
-        import helper_arnold as render_helper
+        import helper_vray as render_helper
         reload(render_helper)
         subdivisions = ui.checkbox6.isChecked()
 
-    elif renderer.name == 'PxrDisey':
-        import helper_arnold as render_helper
+    elif renderer.name == 'PxrDisney':
+        import helper_renderman as render_helper
         reload(render_helper)
+        subdivisions = ui.checkbox7.isChecked()
 
     elif renderer.name == 'PxrSurface':
-        import helper_arnold as render_helper
+        import helper_renderman as render_helper
         reload(render_helper)
+        subdivisions = ui.checkbox7.isChecked()
 
     # Get the textures to use
     texturesToUse = helper.getTexturesToUse(renderer, foundTextures, uiElements)
