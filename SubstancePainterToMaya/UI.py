@@ -201,6 +201,7 @@ class PainterToMayaUI:
         self.checkbox3 = QtWidgets.QCheckBox('Force texture replacement')
         self.checkbox3.setChecked(True)
         self.checkbox3.setEnabled(False)
+        self.checkbox3.setVisible(False)
         self.optionsSubLayout1.addWidget(self.checkbox3)
 
         self.checkbox4 = QtWidgets.QCheckBox('Add colorCorrect node after each file node')
