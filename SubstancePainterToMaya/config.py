@@ -1,10 +1,11 @@
 PLUGIN_NAME = 'Substance to Maya'
 PLUGIN_VERSION = '0.1'
+TEXTURE_FOLDER = 'sourceImages'
 INFOS = 'Report bugs to tristan.legranche@gmail.com \n\nTool under licence CC-BY-NC \nContact me for commercial use'
 
 PAINTER_IMAGE_EXTENSIONS = [
     'bmp', 'ico', 'jpeg', 'jpg', 'jng', 'pbm', 'pbmraw', 'pgm', 'pgmraw', 'png', 'ppm', 'ppmraw', 'targa',
-    'tiff', 'tga', 'wbmp', 'xpm', 'gif', 'hdr', 'exr', 'j2k', 'jp2', 'pfm', 'webp', 'jpeg-xr', 'psd'
+    'tiff', 'tga', 'wbmp', 'xpm', 'gif', 'hdr', 'exr', 'j2k', 'jp2', 'pfm', 'webp', 'jpeg-xr', 'psd', 'tif'
 ]
 
 
@@ -37,6 +38,5 @@ EMISSION = [
     'emission', 'Emission', 'emissive', 'Emissive', 'light', 'Light'
 ]
 
-DELIMITERS = [
-    '-', '_', ',', '*', '@', '\\', '/', '+'
-]
+DELIMITERS = '-|_|@|\+| |\.'
+
