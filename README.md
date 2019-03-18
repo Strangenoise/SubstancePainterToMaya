@@ -83,8 +83,8 @@ Click this button to import the textures, create the nodes and connect everythin
 ## Step by step guides
 [Arnold - Step by step](Arnold.md)  
 [VRay - Step by step](Vray.md)  
-[Renderman - PxrDisney - Step by step](PxrDisney.md)  
-[Renderman - PxrSurface - Step by step](PxrSurface.md)  
+[Renderman - PxrDisney - Step by step](pxrDisney.md)  
+[Renderman - PxrSurface - Step by step](pxrSurface.md)  
 
 ## Features to come
 
