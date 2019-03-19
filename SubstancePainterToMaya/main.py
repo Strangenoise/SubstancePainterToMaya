@@ -169,6 +169,7 @@ def proceed(ui, foundTextures, renderer, uiElements):
     elif renderer.name == 'Redshift':
         import helper_redshift as render_helper
         reload(render_helper)
+        subdivisions = ui.checkbox8.isChecked()
         # subdivisions = ui.checkbox7.isChecked()
 
     # Get the textures to use

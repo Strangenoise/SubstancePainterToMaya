@@ -268,6 +268,34 @@ def displaySecondPartOfUI(ui, renderer):
         ui.subdivInterRenderman.setEnabled(False)
         ui.optionsSubLayout2.addWidget(ui.subdivInterRenderman)
 
+    elif renderer.name == 'Redshift':
+        # Renderman Subdivisions
+        ui.checkbox8 = QtWidgets.QCheckBox('Add subdivisions')
+        ui.optionsSubLayout2.addWidget(ui.checkbox8)
+        ui.checkbox8.stateChanged.connect(lambda: ui.addRedshiftSubdivisionsCheckbox())
+
+        ui.subdivIterRedshiftTitle = QtWidgets.QLabel('scheme')
+        ui.optionsSubLayout2.addWidget(ui.subdivIterRedshiftTitle)
+
+        ui.subdivIterRedshift = QtWidgets.QComboBox()
+        ui.subdivIterRedshift.addItems(['Cat + Loop', 'Cat'])
+        ui.subdivIterRedshift.setEnabled(False)
+        ui.optionsSubLayout2.addWidget(ui.subdivIterRedshift)
+
+        ui.subdivMinTitle = QtWidgets.QLabel('Min Edge Length')
+        ui.optionsSubLayout2.addWidget(ui.subdivMinTitle)
+
+        ui.subdivMin = QtWidgets.QLineEdit('4.00')
+        ui.subdivMin.setEnabled(False)
+        ui.optionsSubLayout2.addWidget(ui.subdivMin)
+
+        ui.subdivMaxTitle = QtWidgets.QLabel('Max Subdivs')
+        ui.optionsSubLayout2.addWidget(ui.subdivMaxTitle)
+
+        ui.subdivMax = QtWidgets.QLineEdit('6')
+        ui.subdivMax.setEnabled(False)
+        ui.optionsSubLayout2.addWidget(ui.subdivMax)
+
     ui.grpProceed.setVisible(True)
     ui.launchButton.setText('Re-launch')
 

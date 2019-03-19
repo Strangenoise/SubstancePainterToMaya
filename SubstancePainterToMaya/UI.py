@@ -129,6 +129,7 @@ class PainterToMayaUI:
         self.rendererLayout.addWidget(self.rendererRadio2)
         self.rendererLayout.addWidget(self.rendererRadio3)
         self.rendererLayout.addWidget(self.rendererRadio4)
+        self.rendererLayout.addWidget(self.rendererRadio5)
 
         # Materials
         self.grpMaterials = QtWidgets.QGroupBox('Materials')
@@ -177,6 +178,7 @@ class PainterToMayaUI:
         self.scroll.setWidget(self.grpFoundMaps)
         self.scroll.setWidgetResizable(True)
         self.scroll.setFixedHeight(300)
+        self.scroll.setFixedWidth(500)
         self.layVMainWindow02.addWidget(self.scroll)
 
         # Options
@@ -327,3 +329,20 @@ class PainterToMayaUI:
         else:
             self.subdivIterRenderman.setEnabled(False)
             self.subdivInterRenderman.setEnabled(False)
+
+    def addRedshiftSubdivisionsCheckbox(self):
+        """
+
+        :return:
+        """
+        # If subdivisions is checked
+        if self.checkbox8.isChecked():
+            self.subdivIterRedshift.setEnabled(True)
+            self.subdivMin.setEnabled(True)
+            self.subdivMax.setEnabled(True)
+
+        # If subdivisions is not checked
+        else:
+            self.subdivIterRedshift.setEnabled(False)
+            self.subdivMin.setEnabled(False)
+            self.subdivMax.setEnabled(False)

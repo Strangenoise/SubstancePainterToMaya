@@ -12,8 +12,9 @@ def addSubdivisions(ui, texture):
     material = texture.textureSet
 
     # Get values from interface
-    subdivType = ui.subdivType.currentIndex() + 1
-    iterations = ui.subdivIter.text()
+    subdivType = ui.subdivIterRedshift.currentIndex() + 1
+    min = ui.subdivMin.text()
+    max = ui.subdivMax.text()
 
     # Find the shapes connected to the material
     shader = mc.listConnections(material + '.outColor', d=True)[0]
@@ -23,8 +24,32 @@ def addSubdivisions(ui, texture):
 
         # For all shapes add the render subdivisions
         for mesh in meshes:
-            mc.setAttr(mesh + '.aiSubdivType', subdivType)
-            mc.setAttr(mesh + '.aiSubdivIterations', int(iterations))
+            mc.setAttr(mesh + '.rsEnableSubdivision', 1)
+            mc.setAttr(mesh + '.rsMinTessellationLength', float(min))
+            mc.setAttr(mesh + '.rsMaxTessellationSubdivs', int(max))
+
+def createDisplacementMap(texture, renderer, fileNode, colorCorrect, forceTexture=True):
+
+    print('displacement')
+
+    shadingGroups = None
+    displacementNode = renderer.renderParameters.DISPLACE_NODE
+
+    # Create a displacement node
+    displaceNode = mc.shadingNode(displacementNode, asShader=True)
+
+    # Connect the texture to the displacement node
+    connectTexture(fileNode, 'outColor', displaceNode, 'texMap', colorCorrect)
+
+    # Get the shading engine associated with given material
+    shadingGroups = mc.listConnections(texture.textureSet + '.outColor')
+
+    for shadingGroup in shadingGroups:
+
+        if mc.objectType(shadingGroup) == 'shadingEngine':
+            # Connect the displacement node to all the found shading engines
+            mc.connectAttr(displaceNode + '.out',
+                           shadingGroup + '.rsDisplacementShader', force=forceTexture)
 
 def createNormalMap(texture, renderer, fileNode, colorCorrect, forceTexture=True):
     """
@@ -36,7 +61,7 @@ def createNormalMap(texture, renderer, fileNode, colorCorrect, forceTexture=True
     :return: None
     """
 
-    return
+    print('normal')
 
     normalNode = renderer.renderParameters.NORMAL_NODE
     bumpNode = renderer.renderParameters.BUMP_NODE
@@ -47,7 +72,8 @@ def createNormalMap(texture, renderer, fileNode, colorCorrect, forceTexture=True
     normalNode = mc.shadingNode(normalNode, asUtility=True)
 
     # Connect the file node to the normal utility node
-    helper.connectTexture(fileNode, 'outColor', normalNode, 'input', colorCorrect)
+    connectTexture(fileNode, 'outColor', normalNode, 'input', colorCorrect)
+    mc.setAttr(normalNode + '.inputType', 1)
 
     # List the connections in the material input attribute
     connectedNodes = mc.listConnections(material + '.' + attributeName)
@@ -57,38 +83,56 @@ def createNormalMap(texture, renderer, fileNode, colorCorrect, forceTexture=True
 
         for node in connectedNodes:
 
-            # If this is already a normal utility node
-            if mc.objectType(node) == normalNode:
+            if mc.objectType(node) == bumpNode:
 
-                # Connect the new utility instead if forceTexture is true
-                mc.connectAttr(normalNode + '.outValue', material + '.' + attributeName,
+                # If it's a bump node
+                if mc.getAttr(node + '.inputType') == 0:
+
+                    # Get the input file of the bump node
+                    connectedBumpNodes = mc.listConnections(node + '.input')
+                    for connectedBumpNode in connectedBumpNodes:
+
+                        # If it's a colorCorrect or a file node with '_file' in it's name
+                        if '_file' in connectedBumpNode or 'colorCorrect' in connectedBumpNode:
+
+                            # Create a bump blender
+                            bumpBlend = mc.shadingNode('RedshiftBumpBlender', asTexture=True)
+
+                            # Connect the bump node to the bump blender
+                            mc.connectAttr(node + '.out', bumpBlend + '.baseInput',
+                                           force=forceTexture)
+
+                            # Connect the normal node to the bump blender
+                            mc.connectAttr(normalNode + '.out', bumpBlend + '.bumpInput0',
+                                           force=forceTexture)
+
+                            # Connect the bump blender to the material
+                            mc.connectAttr(bumpBlend + '.outColor', material + '.' + attributeName,
+                                           force=forceTexture)
+
+                        else:
+
+                            # Instead replace the bump node by the normal utility node
+                            mc.connectAttr(normalNode + '.outValue', material + '.' + attributeName,
+                                           force=forceTexture)
+
+                else:
+
+                    # Connect the normal utility to the material attribute
+                    mc.connectAttr(normalNode + '.out', material + '.' + attributeName,
+                                   force=forceTexture)
+
+            else:
+
+                # Connect the normal utility to the material attribute
+                mc.connectAttr(normalNode + '.out', material + '.' + attributeName,
                                force=forceTexture)
-
-            # If it's a bump node
-            elif mc.objectType(node) == bumpNode:
-
-                # Get the input file of the bump node
-                connectedBumpNodes = mc.listConnections(node + '.bumpMap')
-                for connectedBumpNode in connectedBumpNodes:
-
-                    # If it's a colorCorrect or a file node with '_file' in it's name
-                    if '_file' in connectedBumpNode or 'colorCorrect' in connectedBumpNode:
-
-                        # Connect the utility node in the bump node
-                        mc.connectAttr(normalNode + '.outValue', node + '.normal',
-                                       force=forceTexture)
-
-                    else:
-
-                        # Instead replace the bump node by the normal utility node
-                        mc.connectAttr(normalNode + '.outValue', material + '.' + attributeName,
-                                       force=forceTexture)
 
     # If there's no connections in the material attribute
     else:
 
         # Connect the normal utility to the material attribute
-        mc.connectAttr(normalNode + '.outValue', material + '.' + attributeName,
+        mc.connectAttr(normalNode + '.out', material + '.' + attributeName,
                        force=forceTexture)
 
 def createBumpMap(texture, renderer, fileNode, colorCorrect, forceTexture=True):
@@ -100,52 +144,107 @@ def createBumpMap(texture, renderer, fileNode, colorCorrect, forceTexture=True):
     :param imageNode: The file node to connect
     :return: None
     """
-
-    return
-
+    print('bump')
     normalNode = renderer.renderParameters.NORMAL_NODE
     bumpNode = renderer.renderParameters.BUMP_NODE
     material = texture.textureSet
     attributeName = texture.materialAttribute
 
-    # Create the bump utility node
+    # Create the normal utility
     bumpNode = mc.shadingNode(bumpNode, asUtility=True)
 
-    # Connect the file node to the bump utility node
-    helper.connectTexture(fileNode, 'outColorR', bumpNode, 'bumpMap', colorCorrect)
+    # Connect the file node to the normal utility node
+    connectTexture(fileNode, 'outColor', bumpNode, 'input', colorCorrect)
+    mc.setAttr(bumpNode + '.inputType', 0)
 
-    # List all the connection in the material attribute
+    # List the connections in the material input attribute
     connectedNodes = mc.listConnections(material + '.' + attributeName)
 
-    # If there's connections
+    # If there's connected nodes
     if connectedNodes:
 
         for node in connectedNodes:
 
-            # If it's a normal utility node
-            if mc.objectType(node) == normalNode:
+            if mc.objectType(node) == bumpNode:
 
-                # Connect the normal utility node to to bump utility
-                mc.connectAttr(node + '.outValue', bumpNode + '.normal',
-                               force=forceTexture)
+                # If it's a normal node
+                if not mc.getAttr(node + '.inputType') == 0:
 
-                # Connect the bump node to the material attribute
-                mc.connectAttr(bumpNode + '.outValue', material + '.' + attributeName,
-                               force=forceTexture)
+                    # Get the input file of the bump node
+                    connectedBumpNodes = mc.listConnections(node + '.input')
+                    for connectedBumpNode in connectedBumpNodes:
 
-            # If it's not a normal utility node
+                        # If it's a colorCorrect or a file node with '_file' in it's name
+                        if '_file' in connectedBumpNode or 'colorCorrect' in connectedBumpNode:
+
+                            # Create a bump blender
+                            bumpBlend = mc.shadingNode('RedshiftBumpBlender', asTexture=True)
+
+                            # Connect the bump node to the bump blender
+                            mc.connectAttr(node + '.out', bumpBlend + '.baseInput',
+                                           force=forceTexture)
+
+                            # Connect the normal node to the bump blender
+                            mc.connectAttr(bumpNode + '.out', bumpBlend + '.bumpInput0',
+                                           force=forceTexture)
+
+                            # Connect the bump blender to the material
+                            mc.connectAttr(bumpBlend + '.outColor', material + '.' + attributeName,
+                                           force=forceTexture)
+
+                        else:
+
+                            # Instead replace the bump node by the normal utility node
+                            mc.connectAttr(bumpNode + '.outValue', material + '.' + attributeName,
+                                           force=forceTexture)
+
+                else:
+
+                    # Connect the normal utility to the material attribute
+                    mc.connectAttr(bumpNode + '.out', material + '.' + attributeName,
+                                   force=forceTexture)
+
             else:
 
-                # Replace the connection by the bump node if the force texture is true
-                mc.connectAttr(bumpNode + '.outValue', material + '.' + attributeName,
+                # Connect the normal utility to the material attribute
+                mc.connectAttr(bumpNode + '.out', material + '.' + attributeName,
                                force=forceTexture)
 
-    # If there's not connections
+    # If there's no connections in the material attribute
     else:
 
-        # Connect the bump utility to the material attribute
-        mc.connectAttr(bumpNode + '.outValue', material + '.' + attributeName,
+        # Connect the normal utility to the material attribute
+        mc.connectAttr(bumpNode + '.out', material + '.' + attributeName,
                        force=forceTexture)
+
+def connectTexture(textureNode, textureOutput, targetNode, targetInput, colorCorrect=False, forceTexture=True):
+    """
+    Connect the file node to the material
+    :param textureNode: Name of the file node
+    :param textureOutput: Output attribute of the file node we need to use
+    :param targetNode: Name of the material node
+    :param targetInput: Input attribute of the material node we need to use
+    :return: None
+    """
+
+    # If use colorCorrect
+    if colorCorrect == True:
+
+        # Create a colorCorrect node
+        colorCorrect = mc.shadingNode('RedshiftColorCorrection', asTexture=True, isColorManaged=True, )
+
+        textureInput = textureOutput.replace('outColor', 'input')
+        ccTextureOutput = textureOutput.replace('outColor', 'outColor')
+
+        # Connect the file node to the color correct
+        mc.connectAttr(textureNode + '.' + textureOutput, colorCorrect + '.' + textureInput, force=forceTexture)
+
+        # Connect the color correct to the material
+        mc.connectAttr(colorCorrect + '.' + ccTextureOutput, targetNode + '.' + targetInput, force=forceTexture)
+
+    # Connect the file node output to to right material input
+    else:
+        mc.connectAttr(textureNode + '.' + textureOutput, targetNode + '.' + targetInput, force=forceTexture)
 
 def connect(ui, texture, renderer, fileNode):
 
@@ -159,7 +258,7 @@ def connect(ui, texture, renderer, fileNode):
     "aiStandardSurface5.refl_brdf"
 
     # Change file node parameters to Raw and add alphaIsLuminance
-    if texture.materialAttribute is not 'baseColor':
+    if texture.materialAttribute is not 'diffuse_color':
         try:
             mc.setAttr(fileNode + '.colorSpace', 'Raw', type='string')
         except:
@@ -167,24 +266,21 @@ def connect(ui, texture, renderer, fileNode):
         mc.setAttr(fileNode + '.alphaIsLuminance', True)
 
     # If height or normalMap
-    if texture.materialAttribute == 'height':
+    if texture.attribute == 'height':
 
-        # If height
-        if texture.output == 'outColorR':
+        # If bump
+        if useBump:
+            createBumpMap(texture, renderer, fileNode, colorCorrect)
 
-            # If bump
-            if useBump:
-                createBumpMap(texture, renderer, fileNode, colorCorrect)
-
-            # If displace
-            if useDisplace:
-                helper.createDisplacementMap(texture, fileNode, colorCorrect)
+        # If displace
+        if useDisplace:
+            createDisplacementMap(texture, renderer, fileNode, colorCorrect)
 
     # If normalMap
-    elif texture.materialAttribute == 'normal':
+    elif texture.attribute == 'normal':
 
         createNormalMap(texture, renderer, fileNode, colorCorrect)
 
     # If it's another type of map
     else:
-        helper.connectTexture(fileNode, texture.output, texture.textureSet, texture.materialAttribute, colorCorrect)
+        connectTexture(fileNode, texture.output, texture.textureSet, texture.materialAttribute, colorCorrect)
