@@ -4,7 +4,6 @@
 This tool is used to automatically connect Substance Painter textures to Arnold, VRay and Renderman for Maya.
 
 ## Installation
-
 * Put the SubstancePainterToMaya folder in a maya script directory (I.e: C:\Users\user\Documents\maya\scripts on Windows)    
 ![install_path](pics/01_installPath.jpg)  
 
@@ -84,11 +83,12 @@ Click this button to import the textures, create the nodes and connect everythin
 [Arnold - Step by step](Arnold.md)  
 [VRay - Step by step](Vray.md)  
 [Renderman - PxrDisney - Step by step](pxrDisney.md)  
-[Renderman - PxrSurface - Step by step](pxrSurface.md)  
+[Renderman - PxrSurface - Step by step](pxrSurface.md)
+[Redshift - Step by step](Redshift.md)    
 
 ## Features to come
 
-1. Add new render engines : redshift and Stingray PBS
+1. Add new material : Stingray PBS
 2. Add UDIMs option
 3. Choose the shader to use (I.e: aiStandardHair, aiStandardVolume...)
 4. Don't create nodes if they're not needed

@@ -94,14 +94,14 @@ class PainterToMayaUI:
         self.textureSetLabel = QtWidgets.QLabel('textureSet')
         self.namingConventionSubLayoutLabel.addWidget(self.textureSetLabel)
 
-        self.textureSet = QtWidgets.QLineEdit('aiStandardSurface4')
+        self.textureSet = QtWidgets.QLineEdit('Type your textureSet name')
         self.namingConventionSubLayoutValue.addWidget(self.textureSet)
 
         self.mapLabel = QtWidgets.QLabel('map')
         self.namingConventionSubLayoutLabel.addWidget(self.mapLabel)
         self.mapLabel.resize(200,200)
 
-        self.map = QtWidgets.QLineEdit('BaseColor')
+        self.map = QtWidgets.QLineEdit('Type your map name')
         self.namingConventionSubLayoutValue.addWidget(self.map)
 
         # Renderer

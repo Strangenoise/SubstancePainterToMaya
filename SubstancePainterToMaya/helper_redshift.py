@@ -61,8 +61,6 @@ def createNormalMap(texture, renderer, fileNode, colorCorrect, forceTexture=True
     :return: None
     """
 
-    print('normal')
-
     normalNode = renderer.renderParameters.NORMAL_NODE
     bumpNode = renderer.renderParameters.BUMP_NODE
     material = texture.textureSet
@@ -83,6 +81,8 @@ def createNormalMap(texture, renderer, fileNode, colorCorrect, forceTexture=True
 
         for node in connectedNodes:
 
+            print(node)
+
             if mc.objectType(node) == bumpNode:
 
                 # If it's a bump node
@@ -92,8 +92,10 @@ def createNormalMap(texture, renderer, fileNode, colorCorrect, forceTexture=True
                     connectedBumpNodes = mc.listConnections(node + '.input')
                     for connectedBumpNode in connectedBumpNodes:
 
+                        print connectedBumpNode
+
                         # If it's a colorCorrect or a file node with '_file' in it's name
-                        if '_file' in connectedBumpNode or 'colorCorrect' in connectedBumpNode:
+                        if '_file' in connectedBumpNode or 'ColorCorrection' in connectedBumpNode:
 
                             # Create a bump blender
                             bumpBlend = mc.shadingNode('RedshiftBumpBlender', asTexture=True)
@@ -113,7 +115,7 @@ def createNormalMap(texture, renderer, fileNode, colorCorrect, forceTexture=True
                         else:
 
                             # Instead replace the bump node by the normal utility node
-                            mc.connectAttr(normalNode + '.outValue', material + '.' + attributeName,
+                            mc.connectAttr(normalNode + '.out', material + '.' + attributeName,
                                            force=forceTexture)
 
                 else:
@@ -175,7 +177,7 @@ def createBumpMap(texture, renderer, fileNode, colorCorrect, forceTexture=True):
                     for connectedBumpNode in connectedBumpNodes:
 
                         # If it's a colorCorrect or a file node with '_file' in it's name
-                        if '_file' in connectedBumpNode or 'colorCorrect' in connectedBumpNode:
+                        if '_file' in connectedBumpNode or 'ColorCorrection' in connectedBumpNode:
 
                             # Create a bump blender
                             bumpBlend = mc.shadingNode('RedshiftBumpBlender', asTexture=True)
@@ -195,7 +197,7 @@ def createBumpMap(texture, renderer, fileNode, colorCorrect, forceTexture=True):
                         else:
 
                             # Instead replace the bump node by the normal utility node
-                            mc.connectAttr(bumpNode + '.outValue', material + '.' + attributeName,
+                            mc.connectAttr(bumpNode + '.out', material + '.' + attributeName,
                                            force=forceTexture)
 
                 else:
