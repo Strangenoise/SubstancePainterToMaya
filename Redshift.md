@@ -40,7 +40,7 @@ Here's the content of my folder
 
 ![install_path](pics/09c_launch.jpg)
 
-You can now see the list of the found maps, for each map you can specify in which PxrSurface parameter you want to plug it.
+You can now see the list of the found maps, for each map you can specify in which RedshiftMaterial parameter you want to plug it.
 See that a Sheen, Coat and Emission have been found, let ---- Choose so they will not be used, or choose another parameter.
 For more usual maps, the parameters are already set (but you can change them if you want)    
 
