@@ -114,14 +114,16 @@ class PainterToMayaUI:
         # Add Renderer widgets
         self.grpRadioRenderer = QtWidgets.QButtonGroup()
         self.rendererRadio1 = QtWidgets.QRadioButton('Arnold (aiStandardSurface)')
+        self.rendererRadio1.setChecked(True)
         self.grpRadioRenderer.addButton(self.rendererRadio1)
         self.rendererRadio2 = QtWidgets.QRadioButton('VRay (VrayMtl)')
         self.grpRadioRenderer.addButton(self.rendererRadio2)
         self.rendererRadio3 = QtWidgets.QRadioButton('Renderman (PxrDisney)')
         self.grpRadioRenderer.addButton(self.rendererRadio3)
-        self.rendererRadio1.setChecked(True)
         self.rendererRadio4 = QtWidgets.QRadioButton('Renderman (PxrSurface)')
         self.grpRadioRenderer.addButton(self.rendererRadio4)
+        self.rendererRadio5 = QtWidgets.QRadioButton('Redshift (RedshiftMaterial)')
+        self.grpRadioRenderer.addButton(self.rendererRadio5)
 
         self.rendererLayout.addWidget(self.rendererRadio1)
         self.rendererLayout.addWidget(self.rendererRadio2)
