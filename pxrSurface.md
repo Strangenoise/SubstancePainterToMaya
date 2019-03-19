@@ -10,7 +10,7 @@
 
 2 - With existing materials
 
-![existing materials](pics/05_existingMaterials_pxrSurface.jpg)
+![existing materials](pics/05_existingMaterials_redshift.jpg)
 
 3 - I launch the tool
 
@@ -20,11 +20,26 @@
 
 ![install_path](pics/07_textureFolder.jpg)
 
-5 - I let the naming convention by default because my texture files are matching it (mesh_textureSet_map.png)
+Here's the content of my folder
 
 ![install_path](pics/08_textureFolderContent.jpg)
 
-6 - I click on launch to search for the textures.
+5 - I enter the textureSet and the map of one of my textures in the Naming Convention part
+
+![install_path](pics/09_setNamingConvention.jpg)
+
+6 - I choose my render engine
+
+![install_path](pics/09a_setRenderer_pxrsurface.jpg)
+
+7 - I choose to create new materials if there's no existing one
+
+![install_path](pics/09b_material.jpg)
+
+8 - I click on launch to search for the textures.
+
+![install_path](pics/09c_launch.jpg)
+
 You can now see the list of the found maps, for each map you can specify in which PxrSurface parameter you want to plug it.
 See that a Sheen, Coat and Emission have been found, let ---- Choose so they will not be used, or choose another parameter.
 For more usual maps, the parameters are already set (but you can change them if you want)  
@@ -58,7 +73,7 @@ Else, Maya's viewport can't handle pxrColorCorrect nodes so the result is black 
 
 ![install_path](pics/15_materialDetails_pxrSurface.jpg)
 
-12 - A created material, Lambert1 was defined as a name in my textureSets (see the texture folder content), because Lambert1 isn't an aiStandardShader, a new one is created with the name Lambert1_shd
+12 - A created material, Lambert1 was defined as a name in my textureSets (see the texture folder content), because Lambert1 doesn't exist a new material Lambert1_shd has been created
 
 ![install_path](pics/16_createdMaterial_pxrSurface.jpg)
 

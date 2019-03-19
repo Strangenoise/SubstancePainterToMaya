@@ -9,7 +9,7 @@ Based on the textureSet and the map you specified, the script search for one fil
 Based on that file, the script extract the position of your textureSets and maps in all your files with the same Naming Convention.
 
 I.e for file = myStudio_Johnny-SHD_Body-BaseColor.png, textureSet = SHD_Body, map = BaseColor  
-The script will look after files with that naming convention: part_textureSet_map.extension
+The script will look after files with that naming convention: part_textureSet_textureSet_map.extension
 
 I.e for file = rollingTeapot_john_SHD_body-baseColor.png, textureSet = SHD_body, map = baseColor  
 The script will look after files with that naming convention: part_part-textureSet_textureSet-map.extension

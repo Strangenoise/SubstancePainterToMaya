@@ -94,14 +94,14 @@ class PainterToMayaUI:
         self.textureSetLabel = QtWidgets.QLabel('textureSet')
         self.namingConventionSubLayoutLabel.addWidget(self.textureSetLabel)
 
-        self.textureSet = QtWidgets.QLineEdit('aiStandardSurface4')
+        self.textureSet = QtWidgets.QLineEdit('Type your textureSet name')
         self.namingConventionSubLayoutValue.addWidget(self.textureSet)
 
         self.mapLabel = QtWidgets.QLabel('map')
         self.namingConventionSubLayoutLabel.addWidget(self.mapLabel)
         self.mapLabel.resize(200,200)
 
-        self.map = QtWidgets.QLineEdit('BaseColor')
+        self.map = QtWidgets.QLineEdit('Type your map name')
         self.namingConventionSubLayoutValue.addWidget(self.map)
 
         # Renderer
@@ -114,19 +114,22 @@ class PainterToMayaUI:
         # Add Renderer widgets
         self.grpRadioRenderer = QtWidgets.QButtonGroup()
         self.rendererRadio1 = QtWidgets.QRadioButton('Arnold (aiStandardSurface)')
+        self.rendererRadio1.setChecked(True)
         self.grpRadioRenderer.addButton(self.rendererRadio1)
         self.rendererRadio2 = QtWidgets.QRadioButton('VRay (VrayMtl)')
         self.grpRadioRenderer.addButton(self.rendererRadio2)
         self.rendererRadio3 = QtWidgets.QRadioButton('Renderman (PxrDisney)')
         self.grpRadioRenderer.addButton(self.rendererRadio3)
-        self.rendererRadio1.setChecked(True)
         self.rendererRadio4 = QtWidgets.QRadioButton('Renderman (PxrSurface)')
         self.grpRadioRenderer.addButton(self.rendererRadio4)
+        self.rendererRadio5 = QtWidgets.QRadioButton('Redshift (RedshiftMaterial)')
+        self.grpRadioRenderer.addButton(self.rendererRadio5)
 
         self.rendererLayout.addWidget(self.rendererRadio1)
         self.rendererLayout.addWidget(self.rendererRadio2)
         self.rendererLayout.addWidget(self.rendererRadio3)
         self.rendererLayout.addWidget(self.rendererRadio4)
+        self.rendererLayout.addWidget(self.rendererRadio5)
 
         # Materials
         self.grpMaterials = QtWidgets.QGroupBox('Materials')
@@ -175,6 +178,7 @@ class PainterToMayaUI:
         self.scroll.setWidget(self.grpFoundMaps)
         self.scroll.setWidgetResizable(True)
         self.scroll.setFixedHeight(300)
+        self.scroll.setFixedWidth(500)
         self.layVMainWindow02.addWidget(self.scroll)
 
         # Options
@@ -325,3 +329,20 @@ class PainterToMayaUI:
         else:
             self.subdivIterRenderman.setEnabled(False)
             self.subdivInterRenderman.setEnabled(False)
+
+    def addRedshiftSubdivisionsCheckbox(self):
+        """
+
+        :return:
+        """
+        # If subdivisions is checked
+        if self.checkbox8.isChecked():
+            self.subdivIterRedshift.setEnabled(True)
+            self.subdivMin.setEnabled(True)
+            self.subdivMax.setEnabled(True)
+
+        # If subdivisions is not checked
+        else:
+            self.subdivIterRedshift.setEnabled(False)
+            self.subdivMin.setEnabled(False)
+            self.subdivMax.setEnabled(False)

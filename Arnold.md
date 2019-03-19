@@ -20,50 +20,65 @@
   
 ![install_path](pics/07_textureFolder.jpg)  
 
-5 - I let the naming convention by default because my texture files are matching it (mesh_textureSet_map.png)
-  
-![install_path](pics/08_textureFolderContent.jpg)  
+Here's the content of my folder
 
-6 - I click on launch to search for the textures.  
-You can now see the list of the found maps, for each map you can specify in which aiStandardSurface parameter you want to plug it.  
-See that a Sheen and Coat have been found, let ---- Choose so they will not be used, or choose another parameter.  
-For more usual maps, the parameters are already set (but you can change them if you want)
+![install_path](pics/08_textureFolderContent.jpg)
+
+5 - I enter the textureSet and the map of one of my textures in the Naming Convention part
+
+![install_path](pics/09_setNamingConvention.jpg)
+
+6 - I choose my render engine
+
+![install_path](pics/09a_setRenderer_arnold.jpg)
+
+7 - I choose to create new materials if there's no existing one
+
+![install_path](pics/09b_material.jpg)
+
+8 - I click on launch to search for the textures.
+
+![install_path](pics/09c_launch.jpg)
+
+You can now see the list of the found maps, for each map you can specify in which aiStandardSurface parameter you want to plug it.
+See that a Sheen, Coat and Emission have been found, let ---- Choose so they will not be used, or choose another parameter.
+For more usual maps, the parameters are already set (but you can change them if you want)    
     
 ![install_path](pics/10_launch.jpg)  
 
-7 - I set the options (all in this case, so I will use height in bump and displace, add a colorCorrect after each file node and add subdivisions to the models)
+9 - I set the options (all in this case, so I will use height in bump and displace, add a colorCorrect after each file node and add subdivisions to the models)
     
 ![install_path](pics/11_setOptions.jpg)  
 
-8 - I click on proceed to launch the procedure
+10 - I click on proceed to launch the procedure
   
 ![install_path](pics/12_proceed.jpg)  
 
-9 - Here is the result, textures are applied
+11 - Here is the result, textures are applied
   
 ![install_path](pics/13_result.jpg)  
 
-10 - In the Hypershade I can see all the new nodes
+12 - In the Hypershade I can see all the new nodes
   
 ![install_path](pics/14_hypershade.jpg)  
 
-11 - A material in details, with the colorCorrects, the connection for bump and normalMap, the displacement
+13 - A material in details, with the colorCorrects, the connection for bump and normalMap, the displacement
   
 ![install_path](pics/15_materialDetails.jpg)  
 
-12 - A created material, Lambert1 was defined as a name in my textureSets (see the texture folder content), because Lambert1 isn't an aiStandardShader, a new one is created with the name Lambert1_shd
+14 - A created material, Lambert1 was defined as a name in my textureSets (see the texture folder content), because Lambert1 doesn't exist a new material Lambert1_shd has been created
   
 ![install_path](pics/16_createdMaterial.jpg)  
 
-13 - The models with already existing materials now have the subdivisions specified in the options
+15 - The models with already existing materials now have the subdivisions specified in the options
   
 ![install_path](pics/17_subdivisions.jpg)  
 
-14 - The wireframe render (subdivisions power !)
+16 - The wireframe render (subdivisions power !)
   
 ![install_path](pics/18_subdivisions02.jpg)  
 
-15 - And the final result (quickly made for this documentation)
+17 - And the final result (quickly made for this documentation)
   
 ![install_path](pics/19_render.jpg)  
 

@@ -94,6 +94,12 @@ class rendererObject:
             self.name = 'PxrSurface'
             print 'Renderman - PxrSurface'
 
+        elif self.ui.grpRadioRenderer.checkedId() == -6:
+            import config_redshift as config
+            reload(config)
+            self.name = 'Redshift'
+            print 'Redshift'
+
         self.renderParameters = config.config()
 
 
@@ -159,6 +165,12 @@ def proceed(ui, foundTextures, renderer, uiElements):
         import helper_renderman as render_helper
         reload(render_helper)
         subdivisions = ui.checkbox7.isChecked()
+
+    elif renderer.name == 'Redshift':
+        import helper_redshift as render_helper
+        reload(render_helper)
+        subdivisions = ui.checkbox8.isChecked()
+        # subdivisions = ui.checkbox7.isChecked()
 
     # Get the textures to use
     texturesToUse = helper.getTexturesToUse(renderer, foundTextures, uiElements)
