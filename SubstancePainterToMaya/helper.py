@@ -1,7 +1,6 @@
 import maya.cmds as mc
 import os
 from PySide2 import QtWidgets
-from PySide2 import QtGui
 import re
 
 class foundMap:
@@ -296,6 +295,20 @@ def displaySecondPartOfUI(ui, renderer):
         ui.subdivMax.setEnabled(False)
         ui.optionsSubLayout2.addWidget(ui.subdivMax)
 
+    if renderer.name == 'Stingray':
+        ui.checkbox1.setVisible(False)
+        ui.checkbox2.setVisible(False)
+        ui.checkbox4.setVisible(False)
+        ui.checkbox1.setChecked(False)
+        ui.checkbox2.setChecked(False)
+        ui.checkbox4.setChecked(False)
+
+    else:
+        ui.checkbox1.setVisible(True)
+        ui.checkbox2.setVisible(True)
+        ui.checkbox4.setVisible(True)
+
+
     ui.grpProceed.setVisible(True)
     ui.launchButton.setText('Re-launch')
 
@@ -364,7 +377,7 @@ def connectPlace2dTexture(place2d, fileNode):
     for attribute in connections:
         mc.connectAttr(place2d + '.' + attribute, fileNode + '.' + attribute)
 
-def checkCreateMaterial(ui, texture, renderParamters):
+def checkCreateMaterial(ui, texture, renderer):
     """
         Based on the interface options, create or use existing materials
         :param material: The material's name
@@ -373,7 +386,7 @@ def checkCreateMaterial(ui, texture, renderParamters):
 
     materialNotFound = False
     materialName = texture.textureSet
-    materialType = renderParamters.SHADER
+    materialType = renderer.renderParameters.SHADER
 
     # If create new materials if they doesn't exist, instead use existing ones
     if ui.grpRadioMaterials.checkedId() == -2:
@@ -407,6 +420,8 @@ def checkCreateMaterial(ui, texture, renderParamters):
         if not mc.objExists(materialName) or not mc.objectType(materialName) == materialType:
             # Specify that the material was not found
             materialNotFound = True
+
+    mc.select(materialName)
 
     return materialName, materialNotFound
 

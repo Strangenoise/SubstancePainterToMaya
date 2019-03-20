@@ -1,6 +1,6 @@
 # Substance to Maya
 ## version 0.1
-## Redshift PxrSurface example
+## Redshift example
 
 [Go back to documentation](README.md)
 
