@@ -124,12 +124,17 @@ class PainterToMayaUI:
         self.grpRadioRenderer.addButton(self.rendererRadio4)
         self.rendererRadio5 = QtWidgets.QRadioButton('Redshift (RedshiftMaterial)')
         self.grpRadioRenderer.addButton(self.rendererRadio5)
+        self.rendererRadio6 = QtWidgets.QRadioButton('StingrayPBS')
+        self.rendererRadio6.toggled.connect(lambda: self.stingraySwitch())
+
+        self.grpRadioRenderer.addButton(self.rendererRadio6)
 
         self.rendererLayout.addWidget(self.rendererRadio1)
         self.rendererLayout.addWidget(self.rendererRadio2)
         self.rendererLayout.addWidget(self.rendererRadio3)
         self.rendererLayout.addWidget(self.rendererRadio4)
         self.rendererLayout.addWidget(self.rendererRadio5)
+        self.rendererLayout.addWidget(self.rendererRadio6)
 
         # Materials
         self.grpMaterials = QtWidgets.QGroupBox('Materials')
@@ -251,6 +256,18 @@ class PainterToMayaUI:
         window = self.mainWindow
         self.mainWindow.show()
         print('UI opened')
+
+    def stingraySwitch(self):
+
+        if self.rendererRadio6.isChecked():
+            self.materialsRadio1.setEnabled(False)
+            self.materialsRadio2.setEnabled(False)
+
+            self.materialsRadio3.setChecked(True)
+        else:
+            self.materialsRadio1.setEnabled(True)
+            self.materialsRadio2.setEnabled(True)
+
 
     def getTextureFolder(self):
         """

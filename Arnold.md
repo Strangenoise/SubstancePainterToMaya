@@ -1,6 +1,6 @@
 # Substance to Maya
 ## version 0.1
-## Arnold exemple
+## Arnold example
 
 [Go back to documentation](README.md)
 

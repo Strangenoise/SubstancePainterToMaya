@@ -99,6 +99,11 @@ class rendererObject:
             reload(config)
             self.name = 'Redshift'
             print 'Redshift'
+        elif self.ui.grpRadioRenderer.checkedId() == -7:
+            import config_stingray as config
+            reload(config)
+            self.name = 'Stingray'
+            print 'Stingray'
 
         self.renderParameters = config.config()
 
@@ -170,7 +175,11 @@ def proceed(ui, foundTextures, renderer, uiElements):
         import helper_redshift as render_helper
         reload(render_helper)
         subdivisions = ui.checkbox8.isChecked()
-        # subdivisions = ui.checkbox7.isChecked()
+
+    elif renderer.name == 'Stingray':
+        import helper_stingray as render_helper
+        reload(render_helper)
+        subdivisions = False
 
     # Get the textures to use
     texturesToUse = helper.getTexturesToUse(renderer, foundTextures, uiElements)
@@ -182,7 +191,7 @@ def proceed(ui, foundTextures, renderer, uiElements):
         fileNode = helper.createFileNode(texture)
 
         # Create material
-        material, materialNotFound = helper.checkCreateMaterial(ui, texture, renderer.renderParameters)
+        material, materialNotFound = helper.checkCreateMaterial(ui, texture, renderer)
 
         if materialNotFound:
             continue
