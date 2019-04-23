@@ -453,7 +453,7 @@ def createMaterial(materialName, materialType):
 def createShadingGroup( materialName):
 
     shadingEngineName = materialName.replace('_shd', '_SG')
-    shadingEngine = mc.shadingNode('shadingEngine', asPostProcess=True, name=shadingEngineName)
+    shadingEngine = mc.sets(renderable=True, noSurfaceShader=True, empty=True, name=shadingEngineName)
 
     return shadingEngine
 
