@@ -330,7 +330,7 @@ def clearLayout(layout):
             else:
                 clearLayout(item.layout())
 
-def createFileNode(texture):
+def createFileNode(texture, UDIMS):
     """
     Creates a file node and a place2d node, set the texture of the file node and connect both of them
     :param material: The name of the material
@@ -350,6 +350,9 @@ def createFileNode(texture):
 
     # Set the file path of the file node
     mc.setAttr(fileNode + '.fileTextureName', itemPath, type='string')
+
+    if UDIMS:
+        mc.setAttr(fileNode + '.uvTilingMode', 3)
 
     # Connect the file and the place2d nodes
     connectPlace2dTexture(place2d, fileNode)

@@ -200,6 +200,9 @@ class PainterToMayaUI:
         self.optionsLayout.insertLayout(2, self.optionsSubLayout2, stretch=1)
 
         # Options Widgets
+        self.checkboxUDIMs = QtWidgets.QCheckBox('Use UDIMs')
+        self.optionsSubLayout1.addWidget(self.checkboxUDIMs)
+
         self.checkbox1 = QtWidgets.QCheckBox('Use height as bump')
         self.optionsSubLayout1.addWidget(self.checkbox1)
 

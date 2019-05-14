@@ -181,6 +181,11 @@ def proceed(ui, foundTextures, renderer, uiElements):
         reload(render_helper)
         subdivisions = False
 
+    UDIMs = False
+
+    if ui.checkboxUDIMs.isChecked():
+        UDIMS = True
+
     # Get the textures to use
     texturesToUse = helper.getTexturesToUse(renderer, foundTextures, uiElements)
 
@@ -188,7 +193,7 @@ def proceed(ui, foundTextures, renderer, uiElements):
     for texture in texturesToUse:
 
         # Create file node and 2dPlacer
-        fileNode = helper.createFileNode(texture)
+        fileNode = helper.createFileNode(texture, UDIMS)
 
         # Create material
         material, materialNotFound = helper.checkCreateMaterial(ui, texture, renderer)
