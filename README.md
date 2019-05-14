@@ -22,6 +22,12 @@ Supported render engines and materials:
 * Create a shelf button in Maya with the following Python command  
 ![Shelf command](pics/04_shelfContent.jpg)  
 
+Here the text version for copy+paste :  
+
+fromSubtstancePainterToMaya import main  
+reload(main)  
+main.SPtoM()
+
 ## New
 
 UDIM option added in the Options part of the UI.  
