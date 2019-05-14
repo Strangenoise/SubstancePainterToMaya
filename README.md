@@ -24,7 +24,7 @@ Supported render engines and materials:
 
 Here the text version for copy+paste :  
 
-fromSubtstancePainterToMaya import main  
+from SubtstancePainterToMaya import main  
 reload(main)  
 main.SPtoM()
 
