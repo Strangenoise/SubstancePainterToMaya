@@ -22,6 +22,10 @@ Supported render engines and materials:
 * Create a shelf button in Maya with the following Python command  
 ![Shelf command](pics/04_shelfContent.jpg)  
 
+## New
+
+UDIM option added in the Options part of the UI.  
+See the UDIM part of this documentation
 
 ## How to use
 1. Open a scene
@@ -93,6 +97,26 @@ If enabled, you can add subdivisions to the meshes or materials (depending of yo
 * #### Proceed
 Click this button to import the textures, create the nodes and connect everything
 
+## UDIM
+
+* The textureSet name here is your FBX file name (used by Substance Painter as part of the texture name, without the .fbx extension)
+
+* As the script uses the textureSet as the material name, 
+I recommand you to export your FBX to substancePainter with the name of the material instead of the name of the object.
+* This way the exported maps will have your material's name as part of their name and you can use it in the textureSet part of the script.
+* If you don't do it this way, you have two solutions:
+    1. Let the things as they are and manually connect the new materials to your objects. 
+    2. Rename your assigned materials to be the same as your FBX file names.
+    
+### UDIM process example
+
+* I got a mesh MyCharacter with a MyCharacterShader material on it.
+* I export my mesh with UDIM as MyCharacterShader.fbx
+* I do the textures in Substance Painter using the "Create a texture set per UDIM tile"
+* I export my maps which are named like "MyCharacterShader_1001_BaseColor.png"
+* In Maya I launch the script and use MyCharacterShader as textureSet name and BaseColor as map name
+* Tadaaaaaaam everything is connected and the UDIM are automatically working.
+
 ## Step by step guides
 [Arnold - Step by step](Arnold.md)  
 [VRay - Step by step](Vray.md)  
@@ -103,10 +127,9 @@ Click this button to import the textures, create the nodes and connect everythin
 
 ## Features to come
 
-1. Add UDIMs option
+1. Add the new UI with the UDIM option to the documentation
 2. Choose the shader to use (I.e: aiStandardHair, aiStandardVolume...)
 3. Don't create nodes if they're not needed
-4. Allow the creation of new StingrayPBS materials
 
 ## Credits
 
