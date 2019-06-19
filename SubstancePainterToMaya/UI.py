@@ -1,4 +1,5 @@
 from PySide2 import QtCore
+from PySide2 import QtGui
 from PySide2 import QtWidgets
 from shiboken2 import wrapInstance
 from maya import OpenMayaUI as omui
@@ -62,11 +63,14 @@ class PainterToMayaUI:
         # Add Texture folder widgets
         sourceImagesFolder = self.actualWorkspace + '/' + self.TEXTURE_FOLDER
         self.texturePath = QtWidgets.QLineEdit(sourceImagesFolder)
+        self.texturePath.setToolTip('Set the path of your texture folder')
         self.textureFolderLayout.addWidget(self.texturePath)
 
         self.getButton = QtWidgets.QPushButton('Get')
         self.getButton.clicked.connect(lambda: self.getTextureFolder())
         self.textureFolderLayout.addWidget(self.getButton)
+        self.getButton.setToolTip('Get your texture folder using a dialog window')
+        self.getButton.setToolTipDuration(2000)
 
         # Naming Convention
         self.grpNamingConvention = QtWidgets.QGroupBox('Naming Convention')
@@ -78,6 +82,9 @@ class PainterToMayaUI:
         self.nomenclatureInfo = QtWidgets.QLabel(
             'Enter the textureSet and the map name of one of your textures'
             '\n\nSee the documentation for more informations\n'
+        )
+        self.nomenclatureInfo.setToolTip(
+            'The script use the defined textureSet and map\'s names to understand your naming convention. \nI.e: myProject_character_left_arm_metalness.png will have character_left_arm as textureSet and metalness as map\nThen the script will find all your textureSets and maps, looking for the different parts of your files names'
         )
         self.namingConventionLayout.addWidget(self.nomenclatureInfo)
 
@@ -95,6 +102,9 @@ class PainterToMayaUI:
         self.namingConventionSubLayoutLabel.addWidget(self.textureSetLabel)
 
         self.textureSet = QtWidgets.QLineEdit('Type your textureSet name')
+        self.textureSet.setToolTip(
+            'The part of one of your texture\'s name which define the material\'s name to use'
+        )
         self.namingConventionSubLayoutValue.addWidget(self.textureSet)
 
         self.mapLabel = QtWidgets.QLabel('map')
@@ -102,6 +112,9 @@ class PainterToMayaUI:
         self.mapLabel.resize(200,200)
 
         self.map = QtWidgets.QLineEdit('Type your map name')
+        self.map.setToolTip(
+            'The part of one of your texture\'s name which define the map type or attribute to use'
+        )
         self.namingConventionSubLayoutValue.addWidget(self.map)
 
         # Renderer
