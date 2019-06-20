@@ -79,7 +79,7 @@ def getMapFromName(mapName, renderer):
     return 0
 
 
-def listTextures(ui, renderer, foundFiles):
+def listTextures(ui, renderer, foundFiles, allTextureSets):
 
     foundTextures = []
     mapsFound = []
@@ -91,6 +91,10 @@ def listTextures(ui, renderer, foundFiles):
     construction, textureSetSeparator, mapSeparator = splitNamingConvention(ui, foundFiles)
 
     for texture in foundFiles:
+
+        if not allTextureSets:
+            if not ui.textureSet.text().encode("ascii") in texture:
+                continue
 
         # Create the texture path
         filePath = os.path.join(texturePath, texture)

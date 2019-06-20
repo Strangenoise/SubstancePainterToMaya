@@ -128,10 +128,16 @@ def launch(ui):
 
     # Get all the texture files
     texturePath = ui.texturePath.text()
+
+    allTextureSets = False
+
+    if ui.textureSetRadio1.isChecked():
+        allTextureSets = True
+
     foundFiles = os.listdir(texturePath)
 
     # Create all the map objects
-    foundTextures = helper.listTextures(ui, renderer, foundFiles)
+    foundTextures = helper.listTextures(ui, renderer, foundFiles, allTextureSets)
 
     # Remove elements from FoundMaps
     helper.clearLayout(ui.foundMapsLayout)
