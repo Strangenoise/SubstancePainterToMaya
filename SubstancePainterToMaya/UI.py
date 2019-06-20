@@ -124,8 +124,8 @@ class PainterToMayaUI:
         self.textureSetRadio2 = QtWidgets.QRadioButton('Use only specified textureSet')
         self.grpRadioTextureSets.addButton(self.textureSetRadio2)
 
-        self.namingConventionSubLayoutValue.addWidget(self.textureSetRadio1)
-        self.namingConventionSubLayoutValue.addWidget(self.textureSetRadio2)
+        self.namingConventionLayout.addWidget(self.textureSetRadio1)
+        self.namingConventionLayout.addWidget(self.textureSetRadio2)
 
         # Renderer
         self.grpRenderer = QtWidgets.QGroupBox('Renderer')
