@@ -158,6 +158,11 @@ def connect(ui, texture, renderer, fileNode):
         texture.materialAttribute = 'bumpMap'
         createNormalMap(texture, renderer, fileNode, colorCorrect)
 
+    elif texture.materialAttribute == 'fresnelIOR':
+
+        mc.setAttr(texture.textureSet + '.lockFresnelIORToRefractionIOR', 0)
+        helper.connectTexture(fileNode, texture.output, texture.textureSet, texture.materialAttribute, colorCorrect)
+
     # If it's another type of map
     else:
         if texture.materialAttribute == 'translucencyColor':

@@ -58,6 +58,10 @@ class config:
             'subsurface': [
                 ['subsurfaceColor', 'SubsurfaceColor', 'SSS', 'SSSColor', 'SSScolor', 'sss', 'sssColor', 'ssscolor'],
                 35
+            ],
+            'IOR': [
+                ['ior', 'IoR', 'IOR', 'fresnelIOR', 'fresnelIoR', 'fresnel', 'fresnelior'],
+                6
             ]
         }
 
