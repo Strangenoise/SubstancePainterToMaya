@@ -101,7 +101,8 @@ class PainterToMayaUI:
         self.textureSetLabel = QtWidgets.QLabel('textureSet')
         self.namingConventionSubLayoutLabel.addWidget(self.textureSetLabel)
 
-        self.textureSet = QtWidgets.QLineEdit('Type your textureSet name')
+        self.textureSet = QtWidgets.QLineEdit()
+        self.textureSet.setPlaceholderText('Type your textureSet name')
         self.textureSet.setToolTip(
             'The part of one of your texture\'s name which define the material\'s name to use'
         )
@@ -111,7 +112,8 @@ class PainterToMayaUI:
         self.namingConventionSubLayoutLabel.addWidget(self.mapLabel)
         self.mapLabel.resize(200,200)
 
-        self.map = QtWidgets.QLineEdit('Type your map name')
+        self.map = QtWidgets.QLineEdit()
+        self.map.setPlaceholderText('Type your map name')
         self.map.setToolTip(
             'The part of one of your texture\'s name which define the map type or attribute to use'
         )
