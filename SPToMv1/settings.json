@@ -1,0 +1,40 @@
+{
+  "naming_conventions": [
+    "$meshName_$textureSet_$mapName",
+    "$mesh_name_$texture_set_$map_name",
+    "$meshName_$mapName.$textureSet",
+    "$textureSet_$mapName"
+  ],
+  "render_engines": [
+    {
+      "name": "Arnold",
+      "ui_name": "Arnold (aiStandardSurface)",
+      "config_file": "config_mtoa"
+    },
+    {
+      "name": "Vray",
+      "ui_name": "VRay (VrayMtl)",
+      "config_file": "config_vray"
+    },
+    {
+      "name": "RendermanDisney",
+      "ui_name": "Renderman (PxrDisney)",
+      "config_file": "config_renderman_pxrdisney"
+    },
+    {
+      "name": "RendermanSurface",
+      "ui_name": "Renderman (PxrSurface)",
+      "config_file": "config_renderman_pxrsurface"
+    },
+    {
+      "name": "Redshift",
+      "ui_name": "Redshift (RedshiftMaterial)",
+      "config_file": "config_redshift"
+    },
+    {
+      "name": "Stingray",
+      "ui_name": "StingrayPBS",
+      "config_file": "config_stingray"
+    }
+  ]
+}

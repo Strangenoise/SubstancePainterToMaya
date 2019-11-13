@@ -38,29 +38,13 @@
 
 # Libraries
 import os
-import maya.cmds as mc
-import maya.OpenMaya as om
 import UI as ui
 import helper
+from SPToMv1 import naming_conventions as namec
+
 reload(ui)
 reload(helper)
-
-# Variables
-toolUI = ui.PainterToMayaUI()
-toolUI.createUI()
-
-# Add action to launch button
-toolUI.launchButton.clicked.connect(lambda: launch(toolUI))
-
-###################################
-#
-# Needed objects
-#
-# UI - ok
-# Texture
-# Renderer - ok
-#
-###################################
+reload(namec)
 
 class rendererObject:
 
