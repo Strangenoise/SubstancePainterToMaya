@@ -2,12 +2,13 @@ import maya.cmds as mc
 import os
 from PySide2 import QtWidgets
 from PySide2 import QtGui
+from PySide2 import QtCore
 import re
 
 
 class Texture(object):
 
-    def __init__(self, name, filePath, textureSet, mapName):
+    def __init__(self, name, filePath, textureSet, mapName, indice, output, unselected=False):
 
         self.name = name
         self.filePath = filePath
@@ -15,6 +16,9 @@ class Texture(object):
         self.mapName = mapName
         self.mapOutput = ''
         self.shader = ''
+        self.indice = indice
+        self.output = output
+        self.unselected = unselected
 
 
 class Map(object):
@@ -105,40 +109,66 @@ def getMapFromName(mapName, renderer):
     return 0
 
 
-def listTextures(ui, foundChilds, texturePath):
+def listTextures(ui, texturePath, renderer):
+
+    def check_in_path(itemPath, item):
+
+        # Get item's extension
+        extension = item.split('.')[-1]
+
+        # If its a valid texture file
+        if extension in ui.PAINTER_IMAGE_EXTENSIONS:
+
+            child_without_extension = item.rsplit('.', 1)[0]
+            meshName, textureSet, mapName = splitNamingConvention(ui, child_without_extension)
+
+            indice = getMapFromName(mapName, renderer)
+            if indice in renderer.renderParameters.MAP_LIST_COLOR_ATTRIBUTES_INDICES:
+                output = 'outColor'
+            else:
+                output = 'outColorR'
+
+            if textureSet:
+                return Texture(item, itemPath, textureSet, mapName, indice, output)
 
     foundTextures = []
 
-    for child in foundChilds:
+    if not ui.checkboxSearchInSub.isChecked():
 
-        # Create the texture path
-        filePath = os.path.join(texturePath, child)
+        foundChilds = os.listdir(texturePath)
 
-        # If item is a file
-        if os.path.isfile(filePath):
-            # Get item's extension
-            extension = child.split('.')[-1]
+        for child in foundChilds:
 
-            # If its a valid texture file
-            if extension in ui.PAINTER_IMAGE_EXTENSIONS:
+            texture = ''
 
-                child_without_extension = child.rsplit('.', 1)[0]
-                meshName, textureSet, mapName = splitNamingConvention(ui, child_without_extension)
+            # Create the texture path
+            itemPath = os.path.join(texturePath, child)
 
-                if textureSet:
-                    texture = Texture(child, filePath, textureSet, mapName)
+            # If item is a file
+            if os.path.isfile(itemPath):
+
+                texture = check_in_path(itemPath, child)
+                if texture:
                     foundTextures.append(texture)
+
+    else:
+        for root, dirs, files in os.walk(texturePath):
+            for name in files:
+                if not root == '.mayaSwatches':
+                    itemPath = root + '/' + name
+                    texture = check_in_path(itemPath, name)
+                    if texture:
+                        foundTextures.append(texture)
 
     return foundTextures
 
 
 def populateFoundTextures(ui, textures):
 
-    ui.listViewFoundFiles.clear()
+    ui.fileModel.clear()
 
     if textures:
-        for i, texture in enumerate(textures):
-            ui.listViewFoundFiles.insertItem(i, texture.name)
+        ui.fileModel.appendItems(textures)
 
     else:
         ui.listViewFoundFiles.insertItem(0, 'No texture found')
@@ -177,10 +207,11 @@ def populateFoundMaps(ui, renderer, mapTypes):
             ui.foundMapsLayout.insertLayout(-1, foundMapsSubLayout2, stretch=1)
 
             # Create the widgets
-            map1 = QtWidgets.QLineEdit(map.name)
+            map1 = QtWidgets.QLabel(map.name)
             foundMapsSubLayout2.addWidget(map1)
 
             map1Menu = QtWidgets.QComboBox()
+            map1Menu.setFixedWidth(175)
             map1Menu.addItems(renderer.renderParameters.MAP_LIST)
             map1Menu.setCurrentIndex(map.indice)
             foundMapsSubLayout2.addWidget(map1Menu)
@@ -205,6 +236,9 @@ def populateFoundMaps(ui, renderer, mapTypes):
 
 def setRendererOptions(ui, renderer):
 
+    clear_layout(ui.optionsSubLayout2)
+    clear_layout(ui.optionsSubLayout3)
+
     if renderer.name == 'Arnold':
         # Arnold subdivisions
         ui.checkbox5 = QtWidgets.QCheckBox('Add subdivisions')
@@ -212,19 +246,19 @@ def setRendererOptions(ui, renderer):
         ui.checkbox5.stateChanged.connect(lambda: ui.addArnoldSubdivisionsCheckbox())
 
         ui.subdivTypeTitle = QtWidgets.QLabel('Type')
-        ui.optionsSubLayout2.addWidget(ui.subdivTypeTitle)
+        ui.optionsSubLayout3.addWidget(ui.subdivTypeTitle)
 
         ui.subdivType = QtWidgets.QComboBox()
         ui.subdivType.addItems(['catclark', 'linear'])
         ui.subdivType.setEnabled(False)
-        ui.optionsSubLayout2.addWidget(ui.subdivType)
+        ui.optionsSubLayout3.addWidget(ui.subdivType)
 
         ui.subdivIterTitle = QtWidgets.QLabel('Iterations')
-        ui.optionsSubLayout2.addWidget(ui.subdivIterTitle)
+        ui.optionsSubLayout3.addWidget(ui.subdivIterTitle)
 
         ui.subdivIter = QtWidgets.QLineEdit('1')
         ui.subdivIter.setEnabled(False)
-        ui.optionsSubLayout2.addWidget(ui.subdivIter)
+        ui.optionsSubLayout3.addWidget(ui.subdivIter)
 
     elif renderer.name == 'Vray':
         # Vray subdivisions
@@ -233,18 +267,18 @@ def setRendererOptions(ui, renderer):
         ui.checkbox6.stateChanged.connect(lambda: ui.addVraySubdivisionsCheckbox())
 
         ui.subdivIterVrayTitle = QtWidgets.QLabel('Edge Length')
-        ui.optionsSubLayout2.addWidget(ui.subdivIterVrayTitle)
+        ui.optionsSubLayout3.addWidget(ui.subdivIterVrayTitle)
 
         ui.subdivIterVray = QtWidgets.QLineEdit('4')
         ui.subdivIterVray.setEnabled(False)
-        ui.optionsSubLayout2.addWidget(ui.subdivIterVray)
+        ui.optionsSubLayout3.addWidget(ui.subdivIterVray)
 
         ui.subdivMaxVrayTitle = QtWidgets.QLabel('Max Subdivs')
-        ui.optionsSubLayout2.addWidget(ui.subdivMaxVrayTitle)
+        ui.optionsSubLayout3.addWidget(ui.subdivMaxVrayTitle)
 
         ui.maxSubdivIterVray = QtWidgets.QLineEdit('4')
         ui.maxSubdivIterVray.setEnabled(False)
-        ui.optionsSubLayout2.addWidget(ui.maxSubdivIterVray)
+        ui.optionsSubLayout3.addWidget(ui.maxSubdivIterVray)
 
     elif renderer.name == 'PxrSurface' or renderer.name == 'PxrDisney':
         # Renderman Subdivisions
@@ -253,20 +287,20 @@ def setRendererOptions(ui, renderer):
         ui.checkbox7.stateChanged.connect(lambda: ui.addRendermanSubdivisionsCheckbox())
 
         ui.subdivIterRendermanTitle = QtWidgets.QLabel('scheme')
-        ui.optionsSubLayout2.addWidget(ui.subdivIterRendermanTitle)
+        ui.optionsSubLayout3.addWidget(ui.subdivIterRendermanTitle)
 
         ui.subdivIterRenderman = QtWidgets.QComboBox()
         ui.subdivIterRenderman.addItems(['Catmull', 'Loop', 'Bilinear'])
         ui.subdivIterRenderman.setEnabled(False)
-        ui.optionsSubLayout2.addWidget(ui.subdivIterRenderman)
+        ui.optionsSubLayout3.addWidget(ui.subdivIterRenderman)
 
         ui.subdivInterRendermanTitle = QtWidgets.QLabel('Interpolation')
-        ui.optionsSubLayout2.addWidget(ui.subdivInterRendermanTitle)
+        ui.optionsSubLayout3.addWidget(ui.subdivInterRendermanTitle)
 
         ui.subdivInterRenderman = QtWidgets.QComboBox()
         ui.subdivInterRenderman.addItems(['No', 'Sharp creases and corners', 'Sharp creases'])
         ui.subdivInterRenderman.setEnabled(False)
-        ui.optionsSubLayout2.addWidget(ui.subdivInterRenderman)
+        ui.optionsSubLayout3.addWidget(ui.subdivInterRenderman)
 
     elif renderer.name == 'Redshift':
         # Renderman Subdivisions
@@ -283,18 +317,18 @@ def setRendererOptions(ui, renderer):
         ui.optionsSubLayout2.addWidget(ui.subdivIterRedshift)
 
         ui.subdivMinTitle = QtWidgets.QLabel('Min Edge Length')
-        ui.optionsSubLayout2.addWidget(ui.subdivMinTitle)
+        ui.optionsSubLayout3.addWidget(ui.subdivMinTitle)
 
         ui.subdivMin = QtWidgets.QLineEdit('4.00')
         ui.subdivMin.setEnabled(False)
-        ui.optionsSubLayout2.addWidget(ui.subdivMin)
+        ui.optionsSubLayout3.addWidget(ui.subdivMin)
 
         ui.subdivMaxTitle = QtWidgets.QLabel('Max Subdivs')
-        ui.optionsSubLayout2.addWidget(ui.subdivMaxTitle)
+        ui.optionsSubLayout3.addWidget(ui.subdivMaxTitle)
 
         ui.subdivMax = QtWidgets.QLineEdit('6')
         ui.subdivMax.setEnabled(False)
-        ui.optionsSubLayout2.addWidget(ui.subdivMax)
+        ui.optionsSubLayout3.addWidget(ui.subdivMax)
 
     if renderer.name == 'Stingray':
         ui.checkbox1.setVisible(False)

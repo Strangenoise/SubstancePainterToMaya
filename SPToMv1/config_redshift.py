@@ -40,7 +40,7 @@ class config:
                 2
             ],
             'metalness': [
-                ['metal', 'Metal', 'metalness', 'Metalness'],
+                ['metal', 'Metal', 'metalness', 'Metalness', 'metallic', 'Metallic'],
                 3
             ],
             'normal': [

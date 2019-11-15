@@ -29,7 +29,7 @@
 from PySide2 import QtWidgets, QtCore, QtGui
 
 
-class ListView(QtWidgets.QListWidget):
+class ListView(QtWidgets.QListView):
     leftClicked = QtCore.Signal(str)
     middleClicked = QtCore.Signal(QtCore.QModelIndex)
 
@@ -61,7 +61,7 @@ class ListView(QtWidgets.QListWidget):
 
     def initial_blink(self, mode):
 
-        self.setPalette(self.keyPalette if mode == "key" else self.resetPalette)
+        self.setPalette(self.keyPalette if mode == "unselect" else self.resetPalette)
         self.repaint()
 
     def blink(self):
@@ -72,20 +72,21 @@ class ListView(QtWidgets.QListWidget):
 
         self.setPalette(self.basePalette)
 
-class textureItem(object):
-    def __init__(self, name="", isSubObject=False):
-        self.name = name
-        self.isSubObject = isSubObject
 
-
-class textureModel(QtCore.QAbstractTableModel):
+class TextureModel(QtCore.QAbstractTableModel):
 
     def __init__(self, parent=None):
-        super(textureModel, self).__init__(parent)
+        super(TextureModel, self).__init__(parent)
 
         self.items_list = []
         self.italic = QtGui.QFont()
-        self.italic.setItalic(1)
+        self.italic.setItalic(True)
+        self.italic.setStrikeOut(True)
+
+        self.normal = QtGui.QFont()
+        self.normal.setItalic(False)
+        self.normal.setStrikeOut(False)
+        self.normal.setBold(True)
 
     def rowCount(self, parent=QtCore.QModelIndex()):
         return len(self.items_list)
@@ -99,12 +100,26 @@ class textureModel(QtCore.QAbstractTableModel):
             if role == QtCore.Qt.DisplayRole:
                 return item.name
             elif role == QtCore.Qt.FontRole:
-                if item.isSubObject:
+                if item.unselected:
                     return self.italic
+                else:
+                    return self.normal
             elif role == QtCore.Qt.UserRole:
                 return item.name
             elif role == QtCore.Qt.UserRole + 1:
-                return ("1" if item.isSubObject else "0") + item.name
+                return ("1" if item.unselected else "0") + item.name
+            elif role == QtCore.Qt.UserRole + 2:
+                return item
+
+    def setData(self, index, value, role):
+        if index.isValid():
+            item = self.items_list[index.row()]
+            if role == QtCore.Qt.DisplayRole:
+                item.name = value
+                return True
+            elif role == QtCore.Qt.FontRole:
+                item.unselected = value
+                return True
 
     def insertRows(self, row, count, parent=QtCore.QModelIndex()):
 
@@ -140,10 +155,3 @@ class textureModel(QtCore.QAbstractTableModel):
 
         del (self.items_list[:])
         self.endResetModel()
-
-class TreeNode(object):
-
-    def __init__(self, row, parent):
-        self.row = row
-        self.parent = parent
-        self.children = []

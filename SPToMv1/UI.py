@@ -178,12 +178,22 @@ class PainterToMayaUI(QtWidgets.QDialog):
         self.foundFilesLayout = QtWidgets.QVBoxLayout()
         self.grpFoundFiles.setLayout(self.foundFilesLayout)
 
+        self.foundFilesSubLayout = QtWidgets.QHBoxLayout()
+        self.foundFilesLayout.insertLayout(0, self.foundFilesSubLayout)
+
         self.lineEditEditFoundFiles = QtWidgets.QLineEdit(self.grpFoundFiles)
         self.lineEditEditFoundFiles.setPlaceholderText('Type to filter files...')
-        self.foundFilesLayout.addWidget(self.lineEditEditFoundFiles)
+        self.lineEditEditFoundFiles.textChanged.connect(self.filterChanged)
+        self.foundFilesSubLayout.addWidget(self.lineEditEditFoundFiles)
 
         self.listViewFoundFiles = views.ListView(self.grpFoundFiles)
-        self.listViewFoundFiles.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.fileModel = views.TextureModel()
+        self.proxyModel = QtCore.QSortFilterProxyModel(self)
+        self.proxyModel.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        self.proxyModel.setDynamicSortFilter(True)
+        self.proxyModel.setSortRole(QtCore.Qt.UserRole)
+        self.proxyModel.setSourceModel(self.fileModel)
+        self.listViewFoundFiles.setModel(self.proxyModel)
         self.listViewFoundFiles.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
 
         self.foundFilesLayout.addWidget(self.listViewFoundFiles)
@@ -215,11 +225,15 @@ class PainterToMayaUI(QtWidgets.QDialog):
         self.optionsSubLayout2 = QtWidgets.QHBoxLayout()
         self.optionsLayout.insertLayout(2, self.optionsSubLayout2, stretch=1)
 
+        self.optionsSubLayout3 = QtWidgets.QHBoxLayout()
+        self.optionsLayout.insertLayout(3, self.optionsSubLayout3, stretch=1)
+
         # Options Widgets
         self.checkboxUDIMs = QtWidgets.QCheckBox('Use UDIMs')
         self.optionsSubLayout1.addWidget(self.checkboxUDIMs)
 
         self.checkbox1 = QtWidgets.QCheckBox('Use height as bump')
+        self.checkbox1.setChecked(False)
         self.optionsSubLayout1.addWidget(self.checkbox1)
 
         self.checkbox2 = QtWidgets.QCheckBox('Use height as displace')
@@ -258,9 +272,28 @@ class PainterToMayaUI(QtWidgets.QDialog):
         self.infosLayout.addWidget(self.infos)
         self.infos.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
 
-        # Texture model / view
+        # Texture model context menu
+        self.action_select = QtWidgets.QAction('Select the file(s)', self)
+        self.action_select.triggered.connect(lambda: self.switchSelect(0))
+        self.action_unselect = QtWidgets.QAction('Unselect the file(s)', self)
+        self.action_unselect.triggered.connect(lambda: self.switchSelect(1))
+        self.action_selectAll = QtWidgets.QAction('Select all', self)
+        self.action_selectAll.triggered.connect(lambda: self.switchSelectAll(0))
+        self.action_unSelectAll = QtWidgets.QAction('Unselect all', self)
+        self.action_unSelectAll.triggered.connect(lambda: self.switchSelectAll(1))
+
+        self.contextMenu = QtWidgets.QMenu(self)
+        self.contextMenu.addAction(self.action_select)
+        self.contextMenu.addAction(self.action_unselect)
+        self.contextMenu.addSeparator()
+        self.contextMenu.addAction(self.action_selectAll)
+        self.contextMenu.addAction(self.action_unSelectAll)
+
+        self.selectionModel = self.listViewFoundFiles.selectionModel()
 
         # Signals / slots
+        self.listViewFoundFiles.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.listViewFoundFiles.customContextMenuRequested.connect(self.show_list_textures_menu)
 
         # Hide some
         self.grpFoundFiles.setVisible(False)
@@ -279,6 +312,42 @@ class PainterToMayaUI(QtWidgets.QDialog):
         window = self.mainWindow
         self.mainWindow.show()
         print('UI opened')
+
+    def show_list_textures_menu(self, pos):
+
+        index = self.listViewFoundFiles.indexAt(pos)
+
+        # self.action_selectAll.setEnabled()
+        # self.action_unSelectAll.setEnabled()
+
+        self.action_select.setEnabled(index.isValid())
+        self.action_unselect.setEnabled(index.isValid())
+
+        self.contextMenu.popup(self.listViewFoundFiles.viewport().mapToGlobal(pos))
+
+    def filterChanged(self, text):
+        self.proxyModel.setFilterWildcard("*" + text)
+
+    def switchSelectAll(self, option, *args):
+        # Get row count of proxy model
+        rowCount = self.proxyModel.rowCount()
+
+        for i in range(rowCount):
+            index = self.proxyModel.index(i, 0)
+
+            self.proxyModel.setData(index, option, QtCore.Qt.FontRole)
+
+        if option == 0:
+            self.listViewFoundFiles.initial_blink('select')
+        else:
+            self.listViewFoundFiles.initial_blink('unselect')
+        self.listViewFoundFiles.blink()
+
+    def switchSelect(self, option, *args):
+
+        for index in self.selectionModel.selectedIndexes():
+            self.proxyModel.setData(index, option, QtCore.Qt.FontRole)
+
 
     def stingraySwitch(self):
 

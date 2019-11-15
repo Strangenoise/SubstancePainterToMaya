@@ -28,14 +28,8 @@
 """
 TODO
 
-1 - IN TEXTURE PATH
-- Add the ability to use subdirectories
-
 2 - IN FOUND MAP TYPES
 - Add displace in the map list attributes
-
-3 - IN OPTIONS
-- Change use height as bump into use height as displacement
 
 4 - IN FOUND FILES
 - Add the filter into Found Files
@@ -143,10 +137,9 @@ def launch(ui):
         texturePath = projectPath
 
     if os.path.isdir(texturePath):
-        foundChilds = os.listdir(texturePath)
 
         # Create all the map objects
-        foundTextures = helper.listTextures(ui, foundChilds, texturePath)
+        foundTextures = helper.listTextures(ui, texturePath, renderer)
 
         # Populate Tree View
         result = helper.populateFoundTextures(ui, foundTextures)
@@ -197,12 +190,11 @@ def useTheseFiles(ui, foundTextures, renderer):
     mapTypes = []
     foundTypes = []
 
-    number_of_rows = ui.listViewFoundFiles.count()
-    for i in range(0, number_of_rows):
-        textures.append(ui.listViewFoundFiles.item(i).text())
+    print foundTextures
 
+    for texture in ui.fileModel.items_list:
         for foundTexture in foundTextures:
-            if ui.listViewFoundFiles.item(i).text() == foundTexture.name:
+            if texture.name == foundTexture.name:
                 if foundTexture.mapName not in foundTypes:
 
                     mapName = foundTexture.mapName
@@ -222,7 +214,7 @@ def useTheseFiles(ui, foundTextures, renderer):
 
     ui.grpFoundMaps.setTitle('Found ' + str(len(mapTypes)) + ' Map Types')
 
-    ui.proceedButton.clicked.connect(lambda: proceed(ui, foundTextures, renderer, uiElements))
+    ui.proceedButton.clicked.connect(lambda: proceed(ui, final_textures, renderer, uiElements))
 
 
 def proceed(ui, foundTextures, renderer, uiElements):
@@ -265,28 +257,26 @@ def proceed(ui, foundTextures, renderer, uiElements):
     if ui.checkboxUDIMs.isChecked():
         UDIMs = True
 
-    # Get the textures to use
-    texturesToUse = helper.getTexturesToUse(renderer, foundTextures, uiElements)
-
     # Connect textures
-    for texture in texturesToUse:
+    for texture in foundTextures:
 
-        # Create file node and 2dPlacer
-        fileNode = helper.createFileNode(texture, UDIMs)
+        if not texture.unselected:
+            # Create file node and 2dPlacer
+            fileNode = helper.createFileNode(texture, UDIMs)
 
-        # Create material
-        material, materialNotFound = helper.checkCreateMaterial(ui, texture, renderer)
+            # Create material
+            material, materialNotFound = helper.checkCreateMaterial(ui, texture, renderer)
 
-        if materialNotFound:
-            continue
+            if materialNotFound:
+                continue
 
-        texture.textureSet = material
-        texture.materialAttribute = renderer.renderParameters.MAP_LIST_REAL_ATTRIBUTES[texture.indice]
+            texture.textureSet = material
+            texture.materialAttribute = renderer.renderParameters.MAP_LIST_REAL_ATTRIBUTES[texture.indice]
 
-        render_helper.connect(ui, texture, renderer, fileNode)
+            render_helper.connect(ui, texture, renderer, fileNode)
 
-        # Add subdivisions
-        if subdivisions == True:
-            render_helper.addSubdivisions(ui, texture)
+            # Add subdivisions
+            if subdivisions == True:
+                render_helper.addSubdivisions(ui, texture)
 
     print('\n FINISHED \n')

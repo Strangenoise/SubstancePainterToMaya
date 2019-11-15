@@ -38,5 +38,9 @@ EMISSION = [
     'emission', 'Emission', 'emissive', 'Emissive', 'light', 'Light'
 ]
 
+DISPLACEMENT = [
+    'displacement', 'displace', 'displ', 'disp', 'Disp', 'Displ', 'Displace', 'Displacement'
+]
+
 DELIMITERS = '-|_|@|\+| |\.'
 
